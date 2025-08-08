@@ -9,7 +9,7 @@ class Ship(GameObject):
         self.image_horizontal = image_horizontal
         self.image_vertical = image_vertical
 
-    @property.getter
+    @property
     def image(self):
         return (
             self.image_horizontal if self.orientation == Orientation.HORIZONTAL

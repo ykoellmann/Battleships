@@ -1,8 +1,10 @@
 import sys
+from GameUI import GameUI
 
 
 def main():
-    print("Welcome to Battleships!")
+    game = GameUI()
+    game.run()
 
 if __name__ == "__main__":
     main()

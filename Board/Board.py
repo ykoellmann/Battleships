@@ -17,9 +17,14 @@ class Board:
         return None
 
     def can_place_object(self, obj: GameObject) -> bool:
+        # Prüfe, ob alle Zellen frei sind
         for x, y in obj.coordinates:
             cell = self.get_cell(x, y)
             if not cell or cell.is_occupied():
+                return False
+        # Prüfe, ob angrenzende Zellen frei sind (keine direkten Nachbarn)
+        for cell in self.get_adjacent_cells(obj):
+            if cell.is_occupied():
                 return False
         return True
 
