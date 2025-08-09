@@ -11,10 +11,6 @@ class Player:
     def place_object(self, game_object):
         pass
 
-    @abc.abstractmethod
-    def select_target(self):
-        pass
-
     @property
     def has_lost(self):
-        return all(obj.is_destroyed() for obj in self.objects)
+        return all(obj.is_destroyed for obj in self.objects)

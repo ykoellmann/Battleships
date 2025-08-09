@@ -1,5 +1,5 @@
 from Objects.Ships.Ship import Ship
-from Objects.Utils.Orientation import Orientation
+from Utils.Orientation import Orientation
 
 
 class Battleship(Ship):

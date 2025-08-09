@@ -1,11 +1,17 @@
 import random
+from abc import ABC
 from collections import abc
 
-from Objects.Utils.Orientation import Orientation
+from Utils.Orientation import Orientation
 from Player.Player import Player
 
+from Player.Player import Player
+import abc
+import random
+from typing import List, Tuple, Optional
+from Utils.Orientation import Orientation
 
-class ComputerPlayer(Player):
+class ComputerPlayer(Player, ABC):
     def __init__(self, name: str, board):
         super().__init__(name, board)
         self.available_targets = [(x, y) for x in range(board.width) for y in range(board.height)]
@@ -47,5 +53,6 @@ class ComputerPlayer(Player):
     def place_object(self, game_object):
         ship_length = len(game_object.coordinates)
         placed = self.place_safely(self.board, ship_length, game_object)
+        self.objects.append(game_object)
         # Falls keine Position gefunden, mache nichts (sollte aber nie passieren)
         return placed

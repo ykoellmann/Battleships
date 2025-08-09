@@ -1,4 +1,4 @@
-from random import random
+import random
 
 from Board.Board import Board
 from Player.Computer.ComputerPlayer import ComputerPlayer
@@ -9,6 +9,8 @@ class EasyComputerPlayer(ComputerPlayer):
         super().__init__("Easy Computer", board)
 
     def select_target(self):
+        if not self.available_targets:
+            return None
         target = random.choice(self.available_targets)
         self.available_targets.remove(target)
         return target

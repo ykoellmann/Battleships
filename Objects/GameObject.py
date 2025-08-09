@@ -1,19 +1,42 @@
 import abc
 from abc import ABC
-from enum import Enum
 
-from Objects.Utils.Orientation import Orientation
+from Utils.Orientation import Orientation
 
 
 class GameObject(ABC):
-    def __init__(self, name: str, size: int, orientation: Orientation, coordinates: list[tuple[int, int]] = None):
+    """
+    Abstrakte Basis-Klasse für alle Spielobjekte (z. B. Schiffe, Minen).
+
+    Attribute:
+        name (str): Anzeigename des Objekts.
+        size (int): Größe/Länge des Objekts in Zellen.
+        coordinates (list[tuple[int,int]]): Liste der belegten Koordinaten (x, y).
+        is_placed (bool): True, wenn das Objekt auf dem Board platziert wurde.
+        orientation (Orientation): Ausrichtung (horizontal/vertikal).
+    """
+    def __init__(self, name: str, size: int, orientation: Orientation = Orientation.HORIZONTAL, coordinates: list[tuple[int, int]] = None):
+        """Initialisiert ein Spielobjekt.
+
+        Args:
+            name (str): Anzeigename des Objekts.
+            size (int): Länge/Größe in Zellen.
+            orientation (Orientation): Anfangsausrichtung.
+            coordinates (list[tuple[int,int]] | None): Optionale Startkoordinaten.
+        """
         self.name = name
         self.size = size
         self.coordinates = coordinates if coordinates else []
         self.is_placed = False
-        self.orientation = Orientation.HORIZONTAL  # default, falls relevant
+        self.orientation = orientation
 
     def set_position(self, start_x: int, start_y: int):
+        """Berechnet und setzt die Koordinaten basierend auf Startpunkt und Ausrichtung.
+
+        Args:
+            start_x (int): Start-Spalte (x).
+            start_y (int): Start-Zeile (y).
+        """
         if self.orientation == Orientation.HORIZONTAL:
             self.coordinates = [(start_x + i, start_y) for i in range(self.size)]
         else:  # Orientation.VERTICAL
@@ -21,6 +44,14 @@ class GameObject(ABC):
 
     @abc.abstractmethod
     def on_hit(self, x, y):  # bei Treffer
+        """Wird aufgerufen, wenn eine der Zellen dieses Objekts getroffen wurde.
+
+        Args:
+            x: X-Koordinate des Treffers.
+            y: Y-Koordinate des Treffers.
+        Returns:
+            Beliebiger Wert je nach Implementierung (z. B. ob zerstört), optional.
+        """
         pass
 
     @property
@@ -29,7 +60,8 @@ class GameObject(ABC):
         pass
 
     def rotate(self):
-        self.orientation.rotate()
+        """Dreht die Ausrichtung des Objekts (horizontal ↔ vertikal)."""
+        self.orientation = self.orientation.rotate()
 
     @property
     @abc.abstractmethod

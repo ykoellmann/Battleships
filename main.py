@@ -1,5 +1,4 @@
-import sys
-from GameUI import GameUI
+from Game.GameView import GameUI
 
 
 def main():
