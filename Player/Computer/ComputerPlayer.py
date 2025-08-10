@@ -1,14 +1,7 @@
-import random
 from abc import ABC
-from collections import abc
-
-from Utils.Orientation import Orientation
-from Player.Player import Player
-
 from Player.Player import Player
 import abc
 import random
-from typing import List, Tuple, Optional
 from Utils.Orientation import Orientation
 
 class ComputerPlayer(Player, ABC):

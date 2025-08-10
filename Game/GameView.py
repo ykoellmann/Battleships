@@ -8,6 +8,7 @@ from Game.Game import Game
 from Game.GameExtended import GameExtended
 from Objects.GameObject import GameObject
 from Player.Computer.ComputerPlayer import ComputerPlayer
+from Player.Computer.ImpossibleComputerPlayer import ImpossibleComputerPlayer
 from Player.Player import Player
 from Utils.Orientation import Orientation
 from Player.Computer.EasyComputerPlayer import EasyComputerPlayer
@@ -84,9 +85,12 @@ class GameUI:
         else:
             game_class = Game
 
+        player1_board = Board()
+        player2_board = Board()
+
         players = [
-            self.create_player(settings.p1_type, settings.p1_name, settings.p1_difficulty, Board()),
-            self.create_player(settings.p2_type, settings.p2_name, settings.p2_difficulty, Board())
+            self.create_player(settings.p1_type, settings.p1_name, settings.p1_difficulty, player1_board, player2_board),
+            self.create_player(settings.p2_type, settings.p2_name, settings.p2_difficulty, player2_board, player1_board)
         ]
         self.game = game_class(players[0], players[1], settings=settings)
 
@@ -319,13 +323,13 @@ class GameUI:
         # Falls der nächste Spieler auch ein Computer ist, rekursiv fortsetzen
         self.window.after(1000, self.handle_computer_turn)
 
-    def create_player(self, player_type, player_name, level, board):
+    def create_player(self, player_type, player_name, level, board, opponent_board):
         """Erzeugt einen Spieler anhand der UI-Einstellungen.
 
         Args:
             player_type (str): "Mensch" oder "Computer".
             player_name (str): Name für menschliche Spieler.
-            level (str): Schwierigkeitsgrad für Computer ("leicht"/"schwer").
+            level (str): Schwierigkeitsgrad für Computer ("leicht"/"schwer"/"unmöglich").
             board (Board): Zugewiesenes Board.
         Returns:
             Player: Instanz von HumanPlayer, EasyComputerPlayer oder HardComputerPlayer.
@@ -334,8 +338,10 @@ class GameUI:
             return HumanPlayer(player_name, board)
         elif level.lower() == "leicht":
             return EasyComputerPlayer(board)
-        else:
+        elif level.lower() == "schwer":
             return HardComputerPlayer(board)
+        else:
+            return ImpossibleComputerPlayer(board, opponent_board)
 
     def on_cell_hover(self, x, y, enter, player_idx):
         """Event-Handler für Hover über Zellen in der Platzierungsphase.

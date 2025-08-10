@@ -41,7 +41,7 @@ class SettingsView(tk.Frame):
         self.p1_name_entry = tk.Entry(self, textvariable=self.p1_name_var)
 
         self.p1_diff_var = tk.StringVar(value=self.settings.p1_difficulty)
-        self.p1_diff_combo = ttk.Combobox(self, textvariable=self.p1_diff_var, values=["Leicht", "Mittel", "Schwer"], state="readonly", width=10)
+        self.p1_diff_combo = ttk.Combobox(self, textvariable=self.p1_diff_var, values=["Leicht", "Schwer", "Unmöglich"], state="readonly", width=10)
 
         # Spieler 2
         tk.Label(self, text="Spieler 2:").grid(row=2, column=0, sticky="w")
@@ -54,7 +54,7 @@ class SettingsView(tk.Frame):
         self.p2_name_entry = tk.Entry(self, textvariable=self.p2_name_var)
 
         self.p2_diff_var = tk.StringVar(value=self.settings.p2_difficulty)
-        self.p2_diff_combo = ttk.Combobox(self, textvariable=self.p2_diff_var, values=["Leicht", "Mittel", "Schwer"], state="readonly", width=10)
+        self.p2_diff_combo = ttk.Combobox(self, textvariable=self.p2_diff_var, values=["Leicht", "Schwer", "Unmöglich"], state="readonly", width=10)
 
         # Spielmodus
         tk.Label(self, text="Spielmodus:").grid(row=3, column=0, sticky="w")
