@@ -267,32 +267,32 @@ class GameUI:
     def _execute_shot(self, x: int, y: int) -> bool:
         """
         Führt einen Schuss aus und behandelt die Konsequenzen.
-        
+
         Returns:
             bool: True wenn das Spiel beendet wurde, False sonst.
         """
         current_idx = self.game.current_player_idx
         target_board = self.game.players[1 - current_idx].board
-        
+
         hit, is_destroyed, game_object = target_board.shoot_at(x, y)
         self.board_views[current_idx].cells_ui[x][y].set_enabled(False)
-        
+
         # Spezielle Behandlung für HardComputerPlayer
         if isinstance(self.game.current_player, HardComputerPlayer):
             self.game.current_player.process_shot_result(
-                x, y, hit, is_destroyed, 
+                x, y, hit, is_destroyed,
                 game_object.coordinates if game_object else []
             )
-        
+
         self.update_boards()
-        
+
         if self._handle_game_end():
             return True
-        
+
         # Spielerwechsel nur bei Fehlschuss
         if not hit:
             self._switch_player(hit)
-        
+
         return False
 
     def _switch_player(self, hit: bool):
@@ -362,16 +362,16 @@ class GameUI:
         """Event-Handler für Hover über Zellen in der Platzierungsphase."""
         if not self._is_hover_valid(player_idx):
             return
-        
+
         if not enter:
             self._clear_hover_highlights(player_idx)
             return
-        
+
         self._calculate_and_show_hover_highlights(x, y, player_idx)
 
     def _is_hover_valid(self, player_idx):
         """Prüft ob Hover für den gegebenen Spieler valid ist."""
-        return (self.game.current_state == GameState.Placement and 
+        return (self.game.current_state == GameState.Placement and
                 player_idx == self.game.current_player_idx)
 
     def _clear_hover_highlights(self, player_idx):
@@ -384,17 +384,17 @@ class GameUI:
         """Berechnet und zeigt Hover-Highlights für Objektplatzierung."""
         obj = self.game.settings.game_objects[self.placement_object_idx]
         obj.set_position(x, y)
-        
+
         board = self.game.players[player_idx].board
         highlight = set(obj.coordinates)
-        
+
         if self._is_placement_valid(obj, board):
             self.hover_cells = highlight
             self.hover_invalid_cells = set()
         else:
             self.hover_cells = set()
             self.hover_invalid_cells = self._get_invalid_cells(obj, board, highlight)
-        
+
         self.board_views[player_idx].update(
             highlight_cells=self.hover_cells,
             highlight_invalid_cells=self.hover_invalid_cells
@@ -410,11 +410,11 @@ class GameUI:
         for cx, cy in obj.coordinates:
             if not (0 <= cx < board.width and 0 <= cy < board.height):
                 invalid_cells.add((cx, cy))
-        
+
         # Wenn das Objekt nicht platziert werden kann, alle Zellen als ungültig markieren
         if not board.can_place_object(obj) and not invalid_cells:
             invalid_cells = highlight
-        
+
         return invalid_cells
 
     def update_boards(self):
@@ -470,7 +470,7 @@ class GameUI:
         elif self.game.current_state == GameState.Shooting:
             self._disable_orientation_button()
             self._update_current_player_label()
-        
+
         self.update_boards()
 
     def _disable_orientation_button(self):
