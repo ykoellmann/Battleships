@@ -19,3 +19,6 @@ class Orientation(Enum):
             Orientation: Die jeweils andere Ausrichtung (HORIZONTAL <-> VERTICAL).
         """
         return Orientation.VERTICAL if self is Orientation.HORIZONTAL else Orientation.HORIZONTAL
+
+    def __str__(self):
+        return "Horizontal" if self == Orientation.HORIZONTAL else "Vertikal"

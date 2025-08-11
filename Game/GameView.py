@@ -10,6 +10,7 @@ from Objects.GameObject import GameObject
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Player.Computer.ImpossibleComputerPlayer import ImpossibleComputerPlayer
 from Player.Player import Player
+from Player.PlayerFactory import PlayerFactory
 from Utils.Orientation import Orientation
 from Player.Computer.EasyComputerPlayer import EasyComputerPlayer
 from Player.HumanPlayer import HumanPlayer
@@ -35,10 +36,12 @@ class GameUI:
         hover_cells (set[tuple[int,int]]): Aktuelle Hover-Markierungen gültiger Zellen.
         hover_invalid_cells (set[tuple[int,int]]): Aktuelle Hover-Markierungen ungültiger Zellen.
     """
+    COMPUTER_TURN_DELAY = 1000  # Millisekunden
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Schiffe Versenken")
         self.game = None
+        self.boards_frame = None
 
         self.settings_view = SettingsView(self.window, GameSettings(), self.start_game)
         self.settings_view.grid(row=0, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
@@ -65,17 +68,13 @@ class GameUI:
         for idx in range(2):
             frame = ttk.LabelFrame(boards_frame, text=f"Spieler {idx+1}", padding=5)
             frame.grid(row=0, column=idx, padx=10)
-            dummy_board = Board()
             board_view = BoardView(
                 frame,
-                dummy_board,
-                cell_size=32,
                 click_callback=lambda x, y, p=idx: self.on_cell_click(x, y, p),
                 hover_callback=lambda x, y, enter, p=idx: self.on_cell_hover(x, y, enter, p)
             )
             board_view.pack()
             # Hover im Pre-Game deaktiviert
-            board_view.set_hover_enabled(False)
             self.board_views.append(board_view)
 
     def start_game(self):
@@ -88,15 +87,12 @@ class GameUI:
         player1_board = Board()
         player2_board = Board()
 
-        players = [
-            self.create_player(settings.p1_type, settings.p1_name, settings.p1_difficulty, player1_board, player2_board),
-            self.create_player(settings.p2_type, settings.p2_name, settings.p2_difficulty, player2_board, player1_board)
-        ]
-        self.game = game_class(players[0], players[1], settings=settings)
+        player1 = PlayerFactory.create(settings.p1_type, settings.p1_name, settings.p1_difficulty, player1_board, player2_board)
+        player2 = PlayerFactory.create(settings.p2_type, settings.p2_name, settings.p2_difficulty, player2_board, player1_board)
+
+        self.game = game_class(player1, player2, settings=settings)
 
         self.placement_object_idx = 0
-
-        self.game.current_player_idx = 0
         self.game.current_state = GameState.Placement
 
         # Setze Boards in BoardViews
@@ -105,12 +101,7 @@ class GameUI:
             board_view.update()
             board_view.set_hover_enabled(True)
 
-        # Erstelle/aktiviere Orientierungs-Button falls nötig
-        if not hasattr(self, "orientation_button"):
-            self.orientation_button = ttk.Button(self.window, text="Ausrichtung wechseln",
-                                                 command=self.toggle_orientation)
-            self.orientation_button.grid(row=3, column=0, columnspan=2, pady=5)
-        self.orientation_button.state(['!disabled'])
+        self._ensure_orientation_button()
 
         self.update_current_ship_label()
         # Vereinheitlichte Aktivierungslogik: nutze update_boards statt das erste Board standardmäßig zu aktivieren
@@ -126,10 +117,16 @@ class GameUI:
             else:
                 board_view.set_enabled(False)
 
-        # Taste für Orientierung
+        self._ensure_orientation_button()
+
+    def _ensure_orientation_button(self):
+        """Stellt sicher, dass der Orientierungsbutton existiert und aktiviert ihn."""
         if not hasattr(self, "orientation_button"):
-            self.orientation_button = ttk.Button(self.window, text="Ausrichtung wechseln",
-                                                 command=self.toggle_orientation)
+            self.orientation_button = ttk.Button(
+                self.window,
+                text="Ausrichtung wechseln",
+                command=self.toggle_orientation
+            )
             self.orientation_button.grid(row=3, column=0, columnspan=2, pady=5)
         self.orientation_button.state(['!disabled'])
 
@@ -143,12 +140,11 @@ class GameUI:
         if self.game.current_state != GameState.Placement:
             self.current_ship_label.config(text="")
             return
-        player = "Spieler 1" if self.game.current_player_idx == 0 else "Spieler 2"
+
         obj = self.game.settings.game_objects[self.placement_object_idx]
-        name = type(obj).__name__
         size = len(obj.coordinates)
-        orient = "Horizontal" if obj.orientation == Orientation.HORIZONTAL else "Vertikal"
-        self.current_ship_label.config(text=f"{player}: Platziere {name} ({size}) [{orient}]")
+        orient = str(obj.orientation)
+        self.current_ship_label.config(text=f"{self.game.current_player.name}: Platziere {obj.name} ({size}) [{orient}]")
 
     def _place_current_for_human(self, x: int, y: int) -> bool:
         """
@@ -252,23 +248,61 @@ class GameUI:
             if cell.is_hit or cell.is_miss:
                 return
 
-            target_board.shoot_at(x, y)
-            self.board_views[current_idx].cells_ui[x][y].set_enabled(False)
-            self.update_boards()
-
-            if self.game.game_over:
-                winner = self.game.current_player.name
-                messagebox.showinfo("Spielende", f"{winner} hat gewonnen!")
-                self.current_ship_label.config(text="Spiel beendet")
+            if self._execute_shot(x, y):
                 return
-
-            # Wechsle Spieler nach jedem Schuss
-            self.game.current_player_idx = 1 - self.game.current_player_idx
-            self.current_ship_label.config(text=f"{self.game.current_player.name} ist am Zug")
-            self.update_boards()
 
             # Prüfe, ob der nächste Spieler ein Computer ist und lasse ihn schießen
             self.handle_computer_turn()
+
+    def _handle_game_end(self):
+        """Behandelt das Spielende einheitlich."""
+        if not self.game.game_over:
+            return False
+
+        winner = self.game.current_player.name
+        messagebox.showinfo("Spielende", f"{winner} hat gewonnen!")
+        self.current_ship_label.config(text="Spiel beendet")
+        return True
+
+    def _execute_shot(self, x: int, y: int) -> bool:
+        """
+        Führt einen Schuss aus und behandelt die Konsequenzen.
+        
+        Returns:
+            bool: True wenn das Spiel beendet wurde, False sonst.
+        """
+        current_idx = self.game.current_player_idx
+        target_board = self.game.players[1 - current_idx].board
+        
+        hit, is_destroyed, game_object = target_board.shoot_at(x, y)
+        self.board_views[current_idx].cells_ui[x][y].set_enabled(False)
+        
+        # Spezielle Behandlung für HardComputerPlayer
+        if isinstance(self.game.current_player, HardComputerPlayer):
+            self.game.current_player.process_shot_result(
+                x, y, hit, is_destroyed, 
+                game_object.coordinates if game_object else []
+            )
+        
+        self.update_boards()
+        
+        if self._handle_game_end():
+            return True
+        
+        # Spielerwechsel nur bei Fehlschuss
+        if not hit:
+            self._switch_player(hit)
+        
+        return False
+
+    def _switch_player(self, hit: bool):
+        """Wechselt zum nächsten Spieler und aktualisiert UI."""
+        if hit:
+            return
+
+        self.game.current_player_idx = 1 - self.game.current_player_idx
+        self.current_ship_label.config(text=f"{self.game.current_player.name} ist am Zug")
+        self.update_boards()
 
     def start_real_game(self):
         self.game.current_player_idx = 0
@@ -287,7 +321,6 @@ class GameUI:
 
         # Überprüfe, ob der aktuelle Spieler ein Computer ist
         current_player = self.game.current_player
-        current_idx = self.game.current_player_idx
         if not isinstance(current_player, ComputerPlayer):
             return
 
@@ -299,29 +332,11 @@ class GameUI:
         x, y = target
 
         # Führe den Schuss aus
-        target_board = self.game.other_player.board
-        hit, is_destroyed, game_object = target_board.shoot_at(x, y)
-        self.board_views[current_idx].cells_ui[x][y].set_enabled(False)
-
-        if isinstance(current_player, HardComputerPlayer):
-            current_player.process_shot_result(x, y, hit, is_destroyed, game_object.coordinates if game_object else [])
-
-        self.update_boards()
-
-        # Überprüfe, ob das Spiel beendet ist
-        if self.game.game_over:
-            winner = self.game.current_player.name
-            messagebox.showinfo("Spielende", f"{winner} hat gewonnen!")
-            self.current_ship_label.config(text="Spiel beendet")
+        if self._execute_shot(x, y):
             return
 
-        # Wechsle zum anderen Spieler
-        self.game.current_player_idx = 1 - self.game.current_player_idx
-        self.current_ship_label.config(text=f"{self.game.current_player.name} ist am Zug")
-        self.update_boards()
-
         # Falls der nächste Spieler auch ein Computer ist, rekursiv fortsetzen
-        self.window.after(1000, self.handle_computer_turn)
+        self.window.after(self.COMPUTER_TURN_DELAY, self.handle_computer_turn)
 
     def create_player(self, player_type, player_name, level, board, opponent_board):
         """Erzeugt einen Spieler anhand der UI-Einstellungen.
@@ -344,88 +359,129 @@ class GameUI:
             return ImpossibleComputerPlayer(board, opponent_board)
 
     def on_cell_hover(self, x, y, enter, player_idx):
-        """Event-Handler für Hover über Zellen in der Platzierungsphase.
-
-        Args:
-            x (int): Spaltenindex der Zelle.
-            y (int): Zeilenindex der Zelle.
-            enter (bool): True bei Enter, False bei Leave.
-            player_idx (int): Index des betroffenen Boards (Spielers).
-        """
-        if self.game.current_state != GameState.Placement:
+        """Event-Handler für Hover über Zellen in der Platzierungsphase."""
+        if not self._is_hover_valid(player_idx):
             return
-        if player_idx != self.game.current_player_idx:
-            return
+        
         if not enter:
-            self.hover_cells = set()
-            self.hover_invalid_cells = set()
-            self.board_views[player_idx].update()
+            self._clear_hover_highlights(player_idx)
             return
-        # Hole aktuelles Schiff und berechne belegte Zellen
+        
+        self._calculate_and_show_hover_highlights(x, y, player_idx)
+
+    def _is_hover_valid(self, player_idx):
+        """Prüft ob Hover für den gegebenen Spieler valid ist."""
+        return (self.game.current_state == GameState.Placement and 
+                player_idx == self.game.current_player_idx)
+
+    def _clear_hover_highlights(self, player_idx):
+        """Löscht alle Hover-Highlights."""
+        self.hover_cells = set()
+        self.hover_invalid_cells = set()
+        self.board_views[player_idx].update()
+
+    def _calculate_and_show_hover_highlights(self, x, y, player_idx):
+        """Berechnet und zeigt Hover-Highlights für Objektplatzierung."""
         obj = self.game.settings.game_objects[self.placement_object_idx]
         obj.set_position(x, y)
-        highlight = set(obj.coordinates)
+        
         board = self.game.players[player_idx].board
-
-        # Prüfe, ob alle Zellen im Board sind und frei (keine Überschneidung)
-        valid = True
-        invalid_cells = set()
-        for cx, cy in obj.coordinates:
-            if not (0 <= cx < board.width and 0 <= cy < board.height):
-                valid = False
-                invalid_cells.add((cx, cy))
-            elif not board.can_place_object(obj):
-                # Wenn das Schiff insgesamt nicht platziert werden kann, alle Zellen als ungültig markieren
-                invalid_cells = highlight
-                valid = False
-                break
-        if valid:
+        highlight = set(obj.coordinates)
+        
+        if self._is_placement_valid(obj, board):
             self.hover_cells = highlight
             self.hover_invalid_cells = set()
         else:
             self.hover_cells = set()
-            self.hover_invalid_cells = invalid_cells
+            self.hover_invalid_cells = self._get_invalid_cells(obj, board, highlight)
+        
         self.board_views[player_idx].update(
             highlight_cells=self.hover_cells,
             highlight_invalid_cells=self.hover_invalid_cells
         )
 
-    def update_boards(self):
-        for idx, board_view in enumerate(self.board_views):
-            board = self.game.players[idx].board
-            # Platzierungsphase: Nur das eigene Feld ist aktiv
-            if self.game.current_state == GameState.Placement:
-                board_view.set_hover_enabled(True)
-                if idx == self.game.current_player_idx:
-                    board_view.update(
-                        highlight_cells=getattr(self, "hover_cells", set()),
-                        highlight_invalid_cells=getattr(self, "hover_invalid_cells", set())
-                    )
-                    # Aktiviere nur, wenn aktueller Spieler ein Mensch ist
-                    if isinstance(self.game.players[idx], HumanPlayer):
-                        board_view.set_enabled(True)
-                    else:
-                        board_view.set_enabled(False)
-                else:
-                    board_view.update()
-                    board_view.set_enabled(False)
-            # Schussphase: Nur das gegnerische Feld ist aktiv
-            elif self.game.current_state == GameState.Shooting:
-                board_view.set_hover_enabled(True)
-                # Nur das gegnerische Feld aktivieren und nur für menschliche Spieler
-                is_human = isinstance(self.game.current_player, HumanPlayer)
+    def _is_placement_valid(self, obj, board):
+        """Prüft ob die Objektplatzierung gültig ist."""
+        return board.can_place_object(obj)
 
-                if idx == 1 - self.game.current_player_idx and is_human:
-                    board_view.update()
-                    board_view.set_enabled(True)
-                else:
-                    board_view.update()
-                    board_view.set_enabled(False)
+    def _get_invalid_cells(self, obj, board, highlight):
+        """Ermittelt ungültige Zellen für die Objektplatzierung."""
+        invalid_cells = set()
+        for cx, cy in obj.coordinates:
+            if not (0 <= cx < board.width and 0 <= cy < board.height):
+                invalid_cells.add((cx, cy))
+        
+        # Wenn das Objekt nicht platziert werden kann, alle Zellen als ungültig markieren
+        if not board.can_place_object(obj) and not invalid_cells:
+            invalid_cells = highlight
+        
+        return invalid_cells
+
+    def update_boards(self):
+        """Aktualisiert alle Board-Ansichten basierend auf dem aktuellen Spielzustand."""
+        if self.game.current_state == GameState.Placement:
+            self._update_boards_placement()
+        elif self.game.current_state == GameState.Shooting:
+            self._update_boards_shooting()
+        else:
+            self._update_boards_pregame()
+
+    def _update_boards_placement(self):
+        """Aktualisiert Boards für Platzierungsphase."""
+        for idx, board_view in enumerate(self.board_views):
+            board_view.set_hover_enabled(True)
+            is_current_player = idx == self.game.current_player_idx
+            is_human = isinstance(self.game.players[idx], HumanPlayer)
+
+            if is_current_player:
+                board_view.update(
+                    highlight_cells=getattr(self, "hover_cells", set()),
+                    highlight_invalid_cells=getattr(self, "hover_invalid_cells", set())
+                )
+                board_view.set_enabled(is_human)
             else:
-                # Pre-Game oder andere Zustände
-                board_view.set_hover_enabled(False)
                 board_view.update()
                 board_view.set_enabled(False)
+
+    def _update_boards_shooting(self):
+        """Aktualisiert Boards für Schussphase."""
+        is_human = isinstance(self.game.current_player, HumanPlayer)
+
+        for idx, board_view in enumerate(self.board_views):
+            board_view.set_hover_enabled(True)
+            board_view.update()
+
+            # Nur gegnerisches Board aktivieren und nur für Menschen
+            is_enemy_board = idx == 1 - self.game.current_player_idx
+            board_view.set_enabled(is_enemy_board and is_human)
+
+    def _update_boards_pregame(self):
+        """Aktualisiert Boards für Pre-Game Zustand."""
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(False)
+            board_view.update()
+            board_view.set_enabled(False)
+
+    def _update_ui_for_game_state(self):
+        """Aktualisiert die gesamte UI basierend auf dem aktuellen Spielzustand."""
+        if self.game.current_state == GameState.Placement:
+            self._ensure_orientation_button()
+            self.update_current_ship_label()
+        elif self.game.current_state == GameState.Shooting:
+            self._disable_orientation_button()
+            self._update_current_player_label()
+        
+        self.update_boards()
+
+    def _disable_orientation_button(self):
+        """Deaktiviert den Orientierungsbutton."""
+        if hasattr(self, "orientation_button"):
+            self.orientation_button.state(['disabled'])
+
+    def _update_current_player_label(self):
+        """Aktualisiert das Label für den aktuellen Spieler."""
+        if self.game.current_state == GameState.Shooting:
+            self.current_ship_label.config(text=f"{self.game.current_player.name} ist am Zug")
 
     def run(self):
         self.window.mainloop()

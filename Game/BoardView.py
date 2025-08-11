@@ -1,3 +1,4 @@
+from Board.Board import Board
 from Game.CellView import CellView
 import tkinter as tk
 
@@ -10,7 +11,7 @@ class BoardView:
         click_callback (callable | None): Callback bei Klick auf eine Zelle (x, y).
         hover_callback (callable | None): Callback bei Hover über eine Zelle (x, y, enter).
     """
-    def __init__(self, parent, board, cell_size=32, click_callback=None, hover_callback=None):
+    def __init__(self, parent, board = Board(), cell_size=32, click_callback=None, hover_callback=None):
         """Erzeugt eine BoardView.
 
         Args:
