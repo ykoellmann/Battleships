@@ -19,6 +19,7 @@ class CellState(Enum):
     HIT_SHIP = 2
     MISS = 3
     HIT_MINE = 4
+    MINE = 5
 
 
 class Cell:
@@ -102,5 +103,7 @@ class Cell:
             return CellState.MISS
         if self.has_ship:
             return CellState.SHIP
+        if self.has_mine:
+            return CellState.MINE
         return CellState.EMPTY
 

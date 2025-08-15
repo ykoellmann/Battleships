@@ -59,5 +59,7 @@ class CellView:
                 self.button.config(text="", bg="black")
             case CellState.SHIP:
                 self.button.config(text="", bg="gray")
+            case CellState.MINE:
+                self.button.config(text="", bg="orange")
             case CellState.EMPTY:
                 self.button.config(text="", bg="white")
