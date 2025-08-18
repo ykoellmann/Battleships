@@ -2,6 +2,7 @@ from enum import Enum
 from Objects.GameObject import GameObject
 from Objects.Mine import Mine
 from Objects.Ships.Ship import Ship
+from Utils.ShootResult import ShootResult
 
 
 class CellState(Enum):
@@ -50,11 +51,11 @@ class Cell:
     def clear_adjacent(self):
         self.is_adjacent = False
 
-    def shoot(self) -> tuple[bool, bool, GameObject | None]:
+    def shoot(self) -> ShootResult:
         self.is_shot = True
         if self.object:
-            return True, self.object.on_hit(self.x, self.y), self.object  # Treffer
-        return False, False, None  # Fehlschuss
+            return ShootResult(True, self.object.on_hit(self.x, self.y), False, self.object)  # Treffer
+        return ShootResult.miss()  # Fehlschuss
 
     @property
     def is_occupied(self) -> bool:

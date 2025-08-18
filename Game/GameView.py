@@ -5,6 +5,9 @@ from tkinter import ttk, messagebox
 from typing import List
 
 from Board.Board import Board
+from Game.GamePhase.EndPhase import EndPhase
+from Game.GamePhase.ExtendedPlacementPhase import ExtendedPlacementPhase
+from Game.GamePhase.ExtendedShootingPhase import ExtendedShootingPhase
 from Game.GamePhase.PlacementPhase import PlacementPhase
 from Game.GamePhase.ShootingPhase import ShootingPhase
 from Objects.GameObject import GameObject
@@ -53,7 +56,7 @@ class GameUI:
         # Spielfelder
         self.board_views = []
         self.create_game_boards()
-
+        self.has_ended = False
 
         self.hover_cells = set()
 
@@ -78,7 +81,7 @@ class GameUI:
     def start_game(self):
         settings = self.settings_view.settings
         if settings.mode == "Erweitert":
-            game_phase_class = PlacementPhase
+            game_phase_class = ExtendedPlacementPhase
         else:
             game_phase_class = PlacementPhase
 
@@ -144,7 +147,10 @@ class GameUI:
             y (int): Zeilenindex der Zelle.
             player_idx (int): Index des Boards (Spielers), auf dem geklickt wurde.
         """
-        self.game_phase.handle_cell_click(x, y)
+        if isinstance(self.game_phase, ExtendedShootingPhase):
+            self.game_phase.handle_cell_click(x, y, player_idx == self.game_phase.current_player_idx)
+        else:
+            self.game_phase.handle_cell_click(x, y)
         # if self.game_phase.state == GameState.Placement:
         #     is_placed, is_over = self.game_phase.handle_cell_click(x, y)
         #
@@ -169,9 +175,13 @@ class GameUI:
         if not hit:
             self.current_ship_label.config(text=f"{self.game_phase.current_player.name} ist am Zug")
 
-        if is_over:
-            self._handle_game_end()
         self.update_boards()
+        if is_over and not self.has_ended:
+            self.has_ended = True
+            self.winner = self.game_phase.current_player
+            self.game_phase = EndPhase(self.game_phase.players[0], self.game_phase.players[1],
+                                            self._handle_game_end)
+            self.game_phase.next_turn()
 
     def placement_callback(self, is_placed, is_over):
         if not is_placed:
@@ -179,7 +189,11 @@ class GameUI:
             return
 
         if is_over:
-            self.game_phase = ShootingPhase(self.game_phase.players[0], self.game_phase.players[1],
+            if self.game_phase.settings.mode == "Erweitert":
+                game_phase_class = ExtendedShootingPhase
+            else:
+                game_phase_class = ShootingPhase
+            self.game_phase = game_phase_class(self.game_phase.players[0], self.game_phase.players[1],
                                             self.shooting_callback)
             self.game_phase.window = self.window
             self.current_ship_label.config(text="")
@@ -192,12 +206,7 @@ class GameUI:
 
 
     def _handle_game_end(self):
-        """Behandelt das Spielende einheitlich."""
-        if not self.game_phase.is_over():
-            return False
-
-        winner = self.game_phase.current_player.name
-        messagebox.showinfo("Spielende", f"{winner} hat gewonnen!")
+        messagebox.showinfo("Spielende", f"{self.winner.name} hat gewonnen!")
         self.current_ship_label.config(text="Spiel beendet")
         return True
 
@@ -236,7 +245,7 @@ class GameUI:
         self.update_boards()
         messagebox.showinfo("Spielstart", "Alle Schiffe platziert! Das Spiel beginnt.")
         # Wenn der erste Spieler ein Computer ist, lass ihn sofort schießen
-        self.game_phase.next_turn(False)
+        self.game_phase.next_turn(True)
 
     def on_cell_hover(self, x, y, enter, player_idx):
         """Event-Handler für Hover über Zellen in der Platzierungsphase."""
@@ -343,7 +352,7 @@ class GameUI:
 
             # Nur gegnerisches Board aktivieren und nur für Menschen
             is_enemy_board = idx == 1 - self.game_phase.current_player_idx
-            board_view.set_enabled(is_enemy_board and is_human)
+            board_view.set_enabled(is_enemy_board and is_human or isinstance(self.game_phase, ExtendedShootingPhase))
 
     def _update_boards_pregame(self):
         """Aktualisiert Boards für Pre-Game Zustand."""

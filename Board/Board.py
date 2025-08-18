@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 from Board.Cell import Cell
 from Objects.GameObject import GameObject
+from Utils.ShootResult import ShootResult
 
 
 class Board:
@@ -121,7 +124,7 @@ class Board:
             if not cell.is_occupied:
                 cell.mark_adjacent()
 
-    def shoot_at(self, x: int, y: int) -> tuple[bool, bool, GameObject | None]:
+    def shoot_at(self, x: int, y: int) -> ShootResult:
         """Führt einen Schuss auf die Zelle (x, y) aus, sofern gültig.
 
         Args:
@@ -132,5 +135,5 @@ class Board:
         """
         cell = self.get_cell(x, y)
         if not cell or cell.is_shot:
-            return False, False, None
+            return ShootResult(False, False, cell is None)
         return cell.shoot()

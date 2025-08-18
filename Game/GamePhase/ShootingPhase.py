@@ -12,24 +12,27 @@ class ShootingPhase(GamePhase):
     def handle_cell_click(self, x, y):
         cell = self.other_player.board.get_cell(x, y)
         if cell.is_hit or cell.is_miss:
-            return False, False
+            return
 
-        return self.execute_turn(x, y)
+        self.execute_turn(x, y)
 
     def execute_turn(self, x, y):
-        hit, is_destroyed, game_object = self.other_player.board.shoot_at(x, y)
+        result = self.other_player.board.shoot_at(x, y)
 
         if isinstance(self.current_player, HardComputerPlayer):
             self.current_player.process_shot_result(
-                x, y, hit, is_destroyed,
-                game_object.coordinates if game_object else []
+                x, y, result.hit, result.is_destroyed,
+                result.hit_object.coordinates if result.hit_object else []
             )
 
-        return hit, self.next_turn(hit)
+        return result.hit, self.next_turn(result.hit)
 
     def next_turn(self, hit):
         if not hit:
             self.next_player()
+        if self.is_over():
+            self.turn_callback(hit, self.is_over())
+            return
 
 
         if isinstance(self.current_player, ComputerPlayer):

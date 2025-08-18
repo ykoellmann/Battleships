@@ -23,13 +23,15 @@ class PlacementPhase(GamePhase):
 
         is_placed = self.execute_turn(x, y)
         if is_placed:
-            self.placement_object_idx += 1
+            self.next_placement()
             self.next_turn()
 
     def next_turn(self):
         if self.is_over():
             self.turn_callback(True, True)
             return
+        else:
+            self.turn_callback(True, False)
         if not isinstance(self.current_player, ComputerPlayer):
             return
 
