@@ -1,5 +1,6 @@
 import random
 
+from Game.GameLogger import GameLogger
 from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.ShootingPhase import ShootingPhase
 from Game.GamePhase.PhaseConfig import PhaseConfig
@@ -45,8 +46,20 @@ class ExtendedShootingPhase(ShootingPhase):
         if self.shooting_ship:
             self.shot += 1
 
+        # Log shooting attempt
+        GameLogger.log_shot(
+            self.current_player.name,
+            x, y,
+            result.hit,
+            result.hit_object,
+            result.is_destroyed
+        )
+
         # Check if a mine was hit and destroy the shooting ship
         if result.hit and isinstance(result.hit_object, Mine) and self.shooting_ship:
+            # Log mine explosion destroying own ship
+            GameLogger.log_mine_explosion(self.current_player.name, self.shooting_ship)
+            
             self.shooting_ship.destroy()
             # Mark all cells of the destroyed ship as shot so it displays as destroyed in UI
             for ship_x, ship_y in self.shooting_ship.coordinates:

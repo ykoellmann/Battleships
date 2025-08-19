@@ -1,6 +1,7 @@
 import copy
 from typing import List, Optional
 
+from Game.GameLogger import GameLogger
 from Game.GamePhase.GamePhase import GamePhase
 from Game.GamePhase.PhaseConfig import PhaseConfig
 from Player.Computer.ComputerPlayer import ComputerPlayer
@@ -142,10 +143,23 @@ class PlacementPhase(GamePhase):
         """
         obj_copy = copy.deepcopy(self.current_object)
         obj_copy.set_position(x, y)
-        if not self.current_player.board.can_place_object(obj_copy):
+        
+        # Check if placement is valid
+        can_place = self.current_player.board.can_place_object(obj_copy)
+        
+        # Log placement attempt
+        GameLogger.log_ship_placement(
+            self.current_player.name, 
+            obj_copy, 
+            x, y, 
+            can_place
+        )
+        
+        if not can_place:
             if not isinstance(self.current_player, ComputerPlayer):
                 self.turn_callback(False, False)
                 return False
+        
         self.current_player.place_object(obj_copy)
         self.turn_callback(True, False)
         return True

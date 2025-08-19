@@ -30,6 +30,8 @@ from Player.Computer.HardComputerPlayer import HardComputerPlayer
 
 from Game.BoardView import BoardView
 from Game.SettingsView import SettingsView, GameSettings
+from Game.GameLogger import GameLogger
+from Game.LogWindow import LogWindow
 from Utils.GameState import GameState
 
 
@@ -77,6 +79,12 @@ class GameUI:
         self.ship_hover_cells = set()
         self.ship_selected_cells = set()
         self.hover_invalid_cells = set()
+
+        # Initialize logging system (static class, no instantiation needed)
+        self.log_window = LogWindow(self.window)
+        
+        # Log window button
+        self.log_button = None
 
     def create_game_boards(self):
         boards_frame = ttk.Frame(self.window, padding=10)
@@ -133,6 +141,12 @@ class GameUI:
         for idx, board_view in enumerate(self.board_views):
             board_view.board = self.game_phase.players[idx].board
             board_view.update()
+
+        # Create log button
+        self._create_log_button()
+        
+        # Log game start
+        GameLogger.log_game_start(player1.name, player2.name)
 
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
@@ -192,6 +206,16 @@ class GameUI:
         if enabled:
             state = "!" + state
         self.auto_place_button.state([state])
+    
+    def _create_log_button(self):
+        """Creates the log window button if it doesn't exist."""
+        if self.log_button is None:
+            self.log_button = ttk.Button(
+                self.window,
+                text="Spiel-Log öffnen",
+                command=self.log_window.open_window,
+            )
+            self.log_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE + 1, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
     def _show_button(self, button_type: str):
         """Zeigt den entsprechenden Button an und versteckt den anderen."""
@@ -253,6 +277,9 @@ class GameUI:
         # Phase transitions are now handled by the phases themselves via next_phase_callback
         # No need to check is_over and create new phases here
         
+        # Update log window if it's open
+        self.log_window.update_log()
+        
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
 
@@ -304,11 +331,18 @@ class GameUI:
         # Phase transitions are now handled by the phases themselves via next_phase_callback
         # No need to check is_over and create new phases here
 
+        # Update log window if it's open
+        self.log_window.update_log()
+
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
 
 
     def _handle_game_end(self):
+        # Log game end
+        if self.winner:
+            GameLogger.log_game_end(self.winner.name)
+        
         messagebox.showinfo("Spielende", f"{self.winner.name} hat gewonnen!")
         self.current_ship_label.config(text="Spiel beendet")
         return True

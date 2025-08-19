@@ -1,3 +1,4 @@
+from Game.GameLogger import GameLogger
 from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.GamePhase import GamePhase
 from Game.GamePhase.PhaseConfig import PhaseConfig
@@ -30,6 +31,15 @@ class ShootingPhase(GamePhase):
 
     def execute_turn(self, x, y):
         result = self.other_player.board.shoot_at(x, y)
+        
+        # Log shooting attempt
+        GameLogger.log_shot(
+            self.current_player.name,
+            x, y,
+            result.hit,
+            result.hit_object,
+            result.is_destroyed
+        )
 
         if isinstance(self.current_player, HardComputerPlayer):
             self.current_player.process_shot_result(
