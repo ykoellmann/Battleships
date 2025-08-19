@@ -75,12 +75,14 @@ class BoardView:
         if self.hover_callback:
             self.hover_callback(x, y, enter)
 
-    def update(self, highlight_cells=None, highlight_invalid_cells=None):
+    def update(self, highlight_cells=None, highlight_invalid_cells=None, ship_hover_cells=None, ship_selected_cells=None):
         """Aktualisiert die Darstellung der Zellen.
 
         Args:
             highlight_cells (set[tuple[int,int]] | None): Menge gültiger Hover-Zellen.
             highlight_invalid_cells (set[tuple[int,int]] | None): Menge ungültiger Hover-Zellen.
+            ship_hover_cells (set[tuple[int,int]] | None): Menge der Zellen mit Schiff-Hover.
+            ship_selected_cells (set[tuple[int,int]] | None): Menge der Zellen mit ausgewählten Schiffen.
         """
         # Falls das Board gewechselt wurde, Zellen neu bauen
         if len(self.cells_ui) != self.board.height or len(self.cells_ui[0]) != self.board.width:
@@ -91,7 +93,9 @@ class BoardView:
                 xy = (cell_ui.cell.x, cell_ui.cell.y)
                 cell_ui.update(
                     highlight=(xy in highlight_cells) if highlight_cells else False,
-                    highlight_invalid=(xy in highlight_invalid_cells) if highlight_invalid_cells else False
+                    highlight_invalid=(xy in highlight_invalid_cells) if highlight_invalid_cells else False,
+                    ship_hover=(xy in ship_hover_cells) if ship_hover_cells else False,
+                    ship_selected=(xy in ship_selected_cells) if ship_selected_cells else False
                 )
 
     def set_hover_enabled(self, enabled: bool):

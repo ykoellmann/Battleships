@@ -22,10 +22,11 @@ class ExtendedShootingPhase(ShootingPhase):
         super().__init__(config)
         self.shooting_ship = None
         self.shot = 0
+        self.selected_ship = None  # Currently selected ship for UI highlighting
 
     def handle_cell_click(self, x, y, is_own_board):
         if not is_own_board:
-            return super().handle_cell_click(x, y)
+            return super().handle_cell_click(x, y, is_own_board)
 
         clicked_object = self.current_player.board.get_cell(x,y).object
 
@@ -46,8 +47,13 @@ class ExtendedShootingPhase(ShootingPhase):
         return result.hit, self.next_turn(result.hit)
 
     def next_turn(self, hit):
-        if (self.shooting_ship is None and self.shot == 1) or self.shot >= self.shooting_ship.size:
+        size = self.shooting_ship.size if self.shooting_ship else 0
+        if (self.shooting_ship is None and self.shot == 1) or self.shot >= size:
             self.next_player()
+
+        if self.is_over():
+            self.next_phase()
+            return
 
         if isinstance(self.current_player, ComputerPlayer):
             self.execute_computer_turn()
@@ -60,6 +66,7 @@ class ExtendedShootingPhase(ShootingPhase):
 
     def next_player(self):
         self.shooting_ship = None
+        self.selected_ship = None
         self.shot = 0
         super().next_player()
 
@@ -77,7 +84,32 @@ class ExtendedShootingPhase(ShootingPhase):
         self.window.after(1000, lambda: self.execute_turn(x, y))
 
     def new_shooting_ship(self, ship: Ship):
-        if not (ship and isinstance(ship, Ship) and self.shot == 0):
+        """
+        Select or deselect a ship for shooting.
+        
+        Args:
+            ship: The ship to select/deselect
+        """
+        if not (ship and isinstance(ship, Ship)):
             return
-        self.shooting_ship = ship
-        self.shot = 0
+        
+        # Only allow selection if no shots have been fired yet
+        if self.shot > 0:
+            return
+        
+        # Toggle selection: if same ship is clicked again, deselect it
+        if self.selected_ship == ship:
+            self.selected_ship = None
+            return
+        
+        # Select new ship
+        self.selected_ship = ship
+    
+    def confirm_ship_selection(self):
+        """
+        Confirm the currently selected ship as the shooting ship.
+        """
+        if self.selected_ship and self.shot == 0:
+            self.shooting_ship = self.selected_ship
+            self.selected_ship = None  # Clear selection after confirmation
+            self.shot = 0

@@ -35,15 +35,22 @@ class CellView:
         """Aktiviere/Deaktiviere die Interaktivität dieser Zelle."""
         self.button.config(state=("normal" if enabled else "disabled"))
 
-    def update(self, highlight=False, highlight_invalid=False):
+    def update(self, highlight=False, highlight_invalid=False, ship_hover=False, ship_selected=False):
         """
         highlight: True, wenn diese Zelle beim Hover hervorgehoben werden soll (gültig)
         highlight_invalid: True, wenn diese Zelle beim Hover hervorgehoben werden soll (ungültig)
+        ship_hover: True, wenn über ein Schiff gehovered wird (blau)
+        ship_selected: True, wenn ein Schiff ausgewählt ist (grün)
         """
-        # Reihenfolge: Ungültiges Hover > Gültiges Hover > Treffer > Schiff > Standard
-        # Reihenfolge: Ungültiges Hover > Gültiges Hover > Treffer > Schiff > Standard
+        # Reihenfolge: Ungültiges Hover > Ship Selected > Ship Hover > Gültiges Hover > Treffer > Schiff > Standard
         if highlight_invalid:
             self.button.config(bg="#ff5555", text="")
+            return
+        if ship_selected:
+            self.button.config(bg="#00ff00", text="")  # Grün für ausgewähltes Schiff
+            return
+        if ship_hover:
+            self.button.config(bg="#0080ff", text="")  # Blau für Hover über Schiff
             return
         if highlight:
             self.button.config(bg="#b3e6ff", text="")

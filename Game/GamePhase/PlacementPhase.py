@@ -39,15 +39,14 @@ class PlacementPhase(GamePhase):
 
     def next_turn(self):
         if self.is_over():
-            self.turn_callback(True, True)
             return
         else:
             self.turn_callback(True, False)
         if not isinstance(self.current_player, ComputerPlayer):
             return
 
-        self.execute_turn()
-        self.next_placement()
+        # Use the unified auto-placement method for computer players
+        self.auto_place_all_ships()
         self.next_turn()
 
     def is_over(self):
@@ -62,7 +61,13 @@ class PlacementPhase(GamePhase):
         return False  # oder True, wenn direkt Phasewechsel
 
     def next_phase(self):
-        new_phase = PlacementPhase
+        from Game.GamePhase.ShootingPhase import ShootingPhase
+        from Game.GamePhase.ExtendedShootingPhase import ExtendedShootingPhase
+        
+        if self.settings.mode == "Erweitert":
+            new_phase = ExtendedShootingPhase
+        else:
+            new_phase = ShootingPhase
         self.next_phase_callback(new_phase)
 
     @property
@@ -85,6 +90,25 @@ class PlacementPhase(GamePhase):
 
     def toggle_orientation(self):
         self.current_object.rotate()
+
+    def auto_place_all_ships(self):
+        """
+        Automatically place all remaining ships for the current player.
+        
+        This method places all remaining ships using the same logic as ComputerPlayer,
+        making it available for both human and computer players.
+        
+        Returns:
+            bool: True if all ships were successfully placed, False otherwise
+        """
+
+        # Continue placing ships until all are placed for the current player
+        while self.placement_object_idx < len(self.settings.game_objects):
+            current_obj = copy.deepcopy(self.current_object)
+            self.current_player.place_random(current_obj)
+            self.next_placement()
+        
+        return True
 
     def create_game_objects(self, orientation):
         from Objects.Ships.Battleship import Battleship

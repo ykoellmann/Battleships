@@ -43,9 +43,8 @@ class ShootingPhase(GamePhase):
         if not hit:
             self.next_player()
         if self.is_over():
-            self.turn_callback(hit, self.is_over())
+            self.next_phase()
             return
-
 
         if isinstance(self.current_player, ComputerPlayer):
             self.execute_computer_turn()

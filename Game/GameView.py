@@ -49,6 +49,7 @@ class GameUI:
         self.game_phase = None
         self.boards_frame = None
         self.base_config = None  # Base configuration to reuse for phase transitions
+        self.winner = None  # Initialize winner instead of using hasattr
 
         self.settings_view = SettingsView(self.window, GameSettings(), self.start_game)
         self.settings_view.grid(row=0, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
@@ -57,12 +58,20 @@ class GameUI:
         self.current_ship_label = ttk.Label(self.window, text="")
         self.current_ship_label.grid(row=2, column=0, columnspan=2, pady=5)
 
+        # Initialize buttons as None instead of using hasattr
+        self.orientation_button = None
+        self.confirmation_button = None
+        self.auto_place_button = None
+
         # Spielfelder
         self.board_views = []
         self.create_game_boards()
         self.has_ended = False
 
         self.hover_cells = set()
+        self.ship_hover_cells = set()
+        self.ship_selected_cells = set()
+        self.hover_invalid_cells = set()
 
     def create_game_boards(self):
         boards_frame = ttk.Frame(self.window, padding=10)
@@ -83,6 +92,15 @@ class GameUI:
             self.board_views.append(board_view)
 
     def start_game(self):
+        # Reset game state variables when starting a new game
+        self.has_ended = False
+        self.winner = None
+        
+        # Reset UI state variables
+        self.hover_cells = set()
+        self.ship_hover_cells = set()
+        self.ship_selected_cells = set()
+        
         settings = self.settings_view.settings
         if settings.mode == "Erweitert":
             game_phase_class = ExtendedPlacementPhase
@@ -110,13 +128,9 @@ class GameUI:
         for idx, board_view in enumerate(self.board_views):
             board_view.board = self.game_phase.players[idx].board
             board_view.update()
-            board_view.set_hover_enabled(True)
 
-        self._toggle_orientation_button(True)
-
-        self.update_current_ship_label()
-        # Vereinheitlichte Aktivierungslogik: nutze update_boards statt das erste Board standardmäßig zu aktivieren
-        self.update_boards()
+        # Zentrale UI-Update statt verstreute Updates
+        self.update_ui()
         self.game_phase.next_turn()
 
     def enable_placement_ui(self):
@@ -131,11 +145,11 @@ class GameUI:
 
     def _toggle_orientation_button(self, enabled: bool):
         """Stellt sicher, dass der Orientierungsbutton existiert und aktiviert ihn."""
-        if not hasattr(self, "orientation_button"):
+        if self.orientation_button is None:
             self.orientation_button = ttk.Button(
                 self.window,
                 text="Ausrichtung wechseln",
-                command=self.game_phase.toggle_orientation,
+                command=lambda: self.game_phase.toggle_orientation() if isinstance(self.game_phase, PlacementPhase) else None,
             )
             self.orientation_button.grid(row=3, column=0, columnspan=2, pady=5)
 
@@ -144,6 +158,71 @@ class GameUI:
             state = "!" + state
         self.orientation_button.state([state])
 
+    def _toggle_confirmation_button(self, enabled: bool):
+        """Stellt sicher, dass der Bestätigungsbutton für Schiffauswahl existiert und aktiviert ihn."""
+        if self.confirmation_button is None:
+            self.confirmation_button = ttk.Button(
+                self.window,
+                text="Auswahl bestätigen",
+                command=lambda: self.game_phase.confirm_ship_selection() if isinstance(self.game_phase, ExtendedShootingPhase) else None,
+            )
+            self.confirmation_button.grid(row=3, column=0, columnspan=2, pady=5)
+
+        state = "disabled"
+        if enabled:
+            state = "!" + state
+        self.confirmation_button.state([state])
+
+    def _toggle_auto_place_button(self, enabled: bool):
+        """Stellt sicher, dass der Auto-Platzierungsbutton existiert und aktiviert ihn."""
+        if self.auto_place_button is None:
+            self.auto_place_button = ttk.Button(
+                self.window,
+                text="Alle Schiffe automatisch platzieren",
+                command=self._auto_place_all_ships,
+            )
+            self.auto_place_button.grid(row=4, column=0, columnspan=2, pady=5)
+
+        state = "disabled"
+        if enabled:
+            state = "!" + state
+        self.auto_place_button.state([state])
+
+    def _show_button(self, button_type: str):
+        """Zeigt den entsprechenden Button an und versteckt den anderen."""
+        if button_type == "orientation":
+            if self.confirmation_button is not None:
+                self.confirmation_button.grid_remove()
+                self.confirmation_button = None
+            self._toggle_orientation_button(True)
+        elif button_type == "confirmation":
+            if self.orientation_button is not None:
+                self.orientation_button.grid_remove()
+                self.orientation_button = None
+            self._toggle_confirmation_button(True)
+        elif button_type == "none":
+            if self.orientation_button is not None:
+                self.orientation_button.grid_remove()
+                self.orientation_button = None
+            if self.confirmation_button is not None:
+                self.confirmation_button.grid_remove()
+                self.confirmation_button = None
+
+
+    def _auto_place_all_ships(self):
+        """Callback für den Auto-Platzierungsbutton."""
+        if self.game_phase.state != GameState.Placement:
+            return
+        
+        if isinstance(self.game_phase, PlacementPhase):
+            success = self.game_phase.auto_place_all_ships()
+            if success:
+                # Ships were successfully placed, trigger next turn to handle phase transition
+                self.game_phase.next_turn()
+                self.update_ui()
+            else:
+                messagebox.showwarning("Auto-Platzierung fehlgeschlagen", 
+                                     "Nicht alle Schiffe konnten automatisch platziert werden!")
 
     def update_current_ship_label(self):
         if self.game_phase.state != GameState.Placement:
@@ -160,44 +239,17 @@ class GameUI:
             y (int): Zeilenindex der Zelle.
             player_idx (int): Index des Boards (Spielers), auf dem geklickt wurde.
         """
-        if isinstance(self.game_phase, ExtendedShootingPhase):
-            self.game_phase.handle_cell_click(x, y, player_idx == self.game_phase.current_player_idx)
-        else:
-            self.game_phase.handle_cell_click(x, y)
-        # if self.game_phase.state == GameState.Placement:
-        #     is_placed, is_over = self.game_phase.handle_cell_click(x, y)
-        #
-        #     if not is_placed:
-        #         messagebox.showwarning("Ungültige Platzierung", "Hier kann das Schiff nicht platziert werden!")
-        #         return
-        #
-        #     if is_over:
-        #         self.game_phase = ShootingPhase(self.game_phase.players[0], self.game_phase.players[1], self.shooting_callback)
-        #         self.game_phase.window = self.window
-        #         self.current_ship_label.config(text="")
-        #         if hasattr(self, "orientation_button"):
-        #             self.orientation_button.state(['disabled'])
-        #         self.start_real_game()
-        #
-        #     self.update_current_ship_label()
-        #     self.update_boards()
-        # elif self.game_phase.state == GameState.Shooting:
-        #     self.game_phase.handle_cell_click(x, y)
+        self.game_phase.handle_cell_click(x, y, player_idx == self.game_phase.current_player_idx)
+
+        # UI-Update nach jeder Aktion
+        self.update_ui()
 
     def shooting_callback(self, hit, is_over):
-        if not hit:
-            self.current_ship_label.config(text=f"{self.game_phase.current_player.name} ist am Zug")
-
-        self.update_boards()
-        if is_over and not self.has_ended:
-            self.has_ended = True
-            self.winner = self.game_phase.current_player
-            config = self.base_config.with_changes(
-                state=GameState.End,
-                turn_callback=self._handle_game_end
-            )
-            self.game_phase = EndPhase(config)
-            self.game_phase.next_turn()
+        # Phase transitions are now handled by the phases themselves via next_phase_callback
+        # No need to check is_over and create new phases here
+        
+        # Zentrale UI-Update statt verstreute Updates
+        self.update_ui()
 
     def next_phase_callback(self, next_phase: Type[GamePhase]):
         match True:
@@ -207,20 +259,35 @@ class GameUI:
             case _ if self.is_phase(next_phase, ShootingPhase):
                 turn_callback = self.shooting_callback
                 state = GameState.Shooting
+                # Handle transition to shooting phase
+                config = self.base_config.with_changes(
+                    state=state,
+                    turn_callback=turn_callback
+                )
+                self.game_phase = next_phase(config)
+                self.game_phase.window = self.window
+                self.start_real_game()
+                return
             case _ if self.is_phase(next_phase, EndPhase):
+                # Handle game end - set winner before creating EndPhase
+                if not self.has_ended:
+                    self.has_ended = True
+                    self.winner = self.game_phase.current_player
                 turn_callback = self._handle_game_end
                 state = GameState.End
             case _:
                 raise ValueError(f"Invalid phase transition: {next_phase}")
-        
+
         config = self.base_config.with_changes(
             state = state,
             turn_callback=turn_callback
         )
         self.game_phase = next_phase(config)
         self.game_phase.next_turn()
-        self.update_boards()
-    
+
+        # Zentrale UI-Update statt verstreute Updates
+        self.update_ui()
+
     def is_phase(self, next_phase: Type[GamePhase], check_type: Type[GamePhase]):
         return next_phase is check_type or issubclass(next_phase, check_type)
 
@@ -229,24 +296,11 @@ class GameUI:
             messagebox.showwarning("Ungültige Platzierung", "Hier kann das Schiff nicht platziert werden!")
             return
 
-        if is_over:
-            if self.game_phase.settings.mode == "Erweitert":
-                game_phase_class = ExtendedShootingPhase
-            else:
-                game_phase_class = ShootingPhase
-            config = self.base_config.with_changes(
-                state=GameState.Shooting,
-                turn_callback=self.shooting_callback
-            )
-            self.game_phase = game_phase_class(config)
-            self.game_phase.window = self.window
-            self.current_ship_label.config(text="")
-            if hasattr(self, "orientation_button"):
-                self.orientation_button.state(['disabled'])
-            self.start_real_game()
+        # Phase transitions are now handled by the phases themselves via next_phase_callback
+        # No need to check is_over and create new phases here
 
-        self.update_current_ship_label()
-        self.update_boards()
+        # Zentrale UI-Update statt verstreute Updates
+        self.update_ui()
 
 
     def _handle_game_end(self):
@@ -255,21 +309,27 @@ class GameUI:
         return True
 
     def start_real_game(self):
-        self.update_boards()
         messagebox.showinfo("Spielstart", "Alle Schiffe platziert! Das Spiel beginnt.")
+        # Zentrale UI-Update statt verstreute Updates
+        self.update_ui()
         # Wenn der erste Spieler ein Computer ist, lass ihn sofort schießen
         self.game_phase.next_turn(True)
 
     def on_cell_hover(self, x, y, enter, player_idx):
-        """Event-Handler für Hover über Zellen in der Platzierungsphase."""
-        if not self._is_hover_valid(player_idx):
+        """Event-Handler für Hover über Zellen."""
+        # Handle placement phase hover
+        if self.game_phase.state == GameState.Placement and self._is_hover_valid(player_idx):
+            if not enter:
+                self._clear_hover_highlights(player_idx)
+                return
+            self._calculate_and_show_hover_highlights(x, y, player_idx)
             return
-
-        if not enter:
-            self._clear_hover_highlights(player_idx)
-            return
-
-        self._calculate_and_show_hover_highlights(x, y, player_idx)
+        
+        # Handle extended shooting phase ship hover
+        if (self.game_phase.state == GameState.Shooting and 
+            isinstance(self.game_phase, ExtendedShootingPhase) and
+            player_idx == self.game_phase.current_player_idx):
+            self._handle_ship_hover(x, y, enter, player_idx)
 
     def _is_hover_valid(self, player_idx):
         """Prüft ob Hover für den gegebenen Spieler valid ist."""
@@ -319,6 +379,144 @@ class GameUI:
 
         return invalid_cells
 
+    def _handle_ship_hover(self, x, y, enter, player_idx):
+        """Handle ship hover in extended shooting phase."""
+        if not enter:
+            # Clear ship hover when leaving cell
+            self.ship_hover_cells = set()
+            # Preserve ship selection highlighting when clearing hover
+            self.board_views[player_idx].update(
+                ship_hover_cells=self.ship_hover_cells,
+                ship_selected_cells=self.ship_selected_cells
+            )
+            return
+        
+        # Check if there's a ship at this position
+        cell = self.game_phase.current_player.board.get_cell(x, y)
+        if cell.object and cell.object.coordinates is not None:
+            # Highlight all cells of the ship
+            self.ship_hover_cells = set(cell.object.coordinates)
+        else:
+            self.ship_hover_cells = set()
+        
+        # Update with both hover and selection highlighting
+        self.board_views[player_idx].update(
+            ship_hover_cells=self.ship_hover_cells,
+            ship_selected_cells=self.ship_selected_cells
+        )
+
+    def _update_ship_selection_highlighting(self):
+        """Update ship selection highlighting for extended shooting phase."""
+        if not isinstance(self.game_phase, ExtendedShootingPhase):
+            return
+        
+        # Update selected ship highlighting
+        if self.game_phase.selected_ship:
+            self.ship_selected_cells = set(self.game_phase.selected_ship.coordinates)
+        else:
+            self.ship_selected_cells = set()
+        
+        # Update the current player's board with selection highlighting
+        current_player_idx = self.game_phase.current_player_idx
+        self.board_views[current_player_idx].update(
+            ship_hover_cells=self.ship_hover_cells,
+            ship_selected_cells=self.ship_selected_cells
+        )
+
+    def update_ui(self):
+        """
+        Zentrale Methode zur Aktualisierung der gesamten UI basierend auf dem aktuellen GameState.
+
+        Diese Methode vereinheitlicht alle UI-Updates und stellt sicher, dass die Benutzeroberfläche
+        konsistent mit dem aktuellen Spielzustand ist.
+        """
+        if not self.game_phase:
+            self._update_ui_pregame()
+            return
+
+        match self.game_phase.state:
+            case GameState.Placement:
+                self._update_ui_placement()
+            case GameState.Shooting:
+                self._update_ui_shooting()
+            case GameState.End:
+                self._update_ui_end()
+            case _:
+                self._update_ui_pregame()
+
+    def _update_ui_placement(self):
+        """UI-Updates für die Platzierungsphase."""
+        # Board-Updates
+        self._update_boards_placement()
+        
+        # Label-Updates
+        self.update_current_ship_label()
+        
+        # Button-Updates
+        self._toggle_orientation_button(True)
+        self._toggle_auto_place_button(True)
+        
+        # Hover-State
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(True)
+
+    def _update_ui_shooting(self):
+        """UI-Updates für die Schussphase."""
+        # Board-Updates
+        self._update_boards_shooting()
+        
+        # Label-Updates (aktueller Spieler)
+        if self.game_phase.current_player is not None:
+            self.current_ship_label.config(text=f"{self.game_phase.current_player.name} ist am Zug")
+        
+        # Button-Updates - unterschiedlich für Extended und Normal Mode
+        if isinstance(self.game_phase, ExtendedShootingPhase):
+            self._show_button("confirmation")
+            # Update selected ship highlighting
+            self._update_ship_selection_highlighting()
+        else:
+            self._show_button("none")
+        
+        # Hide auto-placement button
+        if self.auto_place_button is not None:
+            self.auto_place_button.grid_remove()
+            self.auto_place_button = None
+        
+        # Hover-State
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(True)
+
+    def _update_ui_end(self):
+        """UI-Updates für das Spielende."""
+        # Alle Boards deaktivieren
+        for board_view in self.board_views:
+            board_view.set_enabled(False)
+            board_view.set_hover_enabled(False)
+            board_view.update()
+        
+        # Label-Updates
+        self.current_ship_label.config(text="Spiel beendet")
+        
+        # Button-Updates
+        self._toggle_orientation_button(False)
+        if self.auto_place_button is not None:
+            self.auto_place_button.grid_remove()
+            self.auto_place_button = None
+
+    def _update_ui_pregame(self):
+        """UI-Updates für den Pre-Game Zustand."""
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(False)
+            board_view.update()
+            board_view.set_enabled(False)
+        
+        self.current_ship_label.config(text="")
+        if self.orientation_button is not None:
+            self._toggle_orientation_button(False)
+        if self.auto_place_button is not None:
+            self.auto_place_button.grid_remove()
+            self.auto_place_button = None
+
     def update_boards(self):
         """Aktualisiert alle Board-Ansichten basierend auf dem aktuellen Spielzustand."""
 
@@ -347,8 +545,8 @@ class GameUI:
 
             if is_current_player:
                 board_view.update(
-                    highlight_cells=getattr(self, "hover_cells", set()),
-                    highlight_invalid_cells=getattr(self, "hover_invalid_cells", set())
+                    highlight_cells=self.hover_cells,
+                    highlight_invalid_cells=self.hover_invalid_cells
                 )
                 board_view.set_enabled(is_human)
             else:
