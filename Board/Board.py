@@ -54,7 +54,7 @@ class Board:
             if not cell or cell.is_occupied:
                 return False
         # Prüfe, ob angrenzende Zellen frei sind (keine direkten Nachbarn)
-        for cell in self.get_adjacent_cells(obj):
+        for cell in self._get_adjacent_cells(obj):
             if cell.is_occupied:
                 return False
         return True
@@ -92,7 +92,7 @@ class Board:
         if obj in self.objects:
             self.objects.remove(obj)
 
-    def get_adjacent_cells(self, obj: GameObject) -> list[Cell]:
+    def _get_adjacent_cells(self, obj: GameObject) -> list[Cell]:
         """Ermittelt alle angrenzenden Zellen (inkl. Diagonalen) zu den Koordinaten eines Objekts.
 
         Args:
@@ -112,15 +112,15 @@ class Board:
 
         return list(adjacent)
 
-    def clear_all_adjacent_markers(self):
+    def _clear_all_adjacent_markers(self):
         """Entfernt alle temporären Nachbar-Markierungen von sämtlichen Zellen."""
         for row in self.grid:
             for cell in row:
                 cell.clear_adjacent()
 
-    def mark_adjacent_for_object(self, obj: GameObject):
+    def _mark_adjacent_for_object(self, obj: GameObject):
         """Markiert freie, angrenzende Zellen rund um ein Objekt (z. B. für Hover-Vorschau)."""
-        for cell in self.get_adjacent_cells(obj):
+        for cell in self._get_adjacent_cells(obj):
             if not cell.is_occupied:
                 cell.mark_adjacent()
 

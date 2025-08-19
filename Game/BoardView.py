@@ -1,25 +1,32 @@
 from Board.Board import Board
 from Game.CellView import CellView
+from constants import UIConfig
 import tkinter as tk
 
 class BoardView:
-    """Darstellung eines Boards (Raster) in Tkinter.
-
-    Attribute:
-        board: Referenz auf das Logik-Board.
-        cell_size (int): Pixelgröße einer Zelle.
-        click_callback (callable | None): Callback bei Klick auf eine Zelle (x, y).
-        hover_callback (callable | None): Callback bei Hover über eine Zelle (x, y, enter).
     """
-    def __init__(self, parent, board = Board(), cell_size=32, click_callback=None, hover_callback=None):
-        """Erzeugt eine BoardView.
+    Visual representation of a game board using Tkinter widgets.
+    
+    This class handles the display and user interaction for game boards,
+    including cell clicking, hover effects, and visual updates for different
+    game states like highlighting and ship placement visualization.
+    
+    Attributes:
+        board: Reference to the logic Board instance
+        cell_size: Pixel size of each cell in the grid
+        click_callback: Callback function for cell click events (x, y)
+        hover_callback: Callback function for cell hover events (x, y, enter)
+    """
+    def __init__(self, parent, board = Board(), cell_size=UIConfig.DEFAULT_CELL_SIZE, click_callback=None, hover_callback=None):
+        """
+        Create a new BoardView instance for displaying game boards.
 
         Args:
-            parent: Tkinter-Container/Elternelement.
-            board: Logik-Board-Instanz.
-            cell_size (int): Pixelgröße einer Zelle.
-            click_callback (callable | None): Callback bei Klick (x, y).
-            hover_callback (callable | None): Callback bei Hover (x, y, enter).
+            parent: Tkinter parent container widget
+            board: Logic board instance (default: new Board())
+            cell_size: Pixel size of each cell (default: UIConfig.DEFAULT_CELL_SIZE)
+            click_callback: Callback function for cell clicks (default: None)
+            hover_callback: Callback function for cell hover events (default: None)
         """
         self.board = board
         self.cell_size = cell_size
@@ -53,22 +60,24 @@ class BoardView:
             self.cells_ui.append(row_ui)
 
     def _on_cell_click(self, x, y):
-        """Interner Handler für Klicks auf Zellen.
+        """
+        Internal handler for cell click events.
 
         Args:
-            x (int): Spaltenindex.
-            y (int): Zeilenindex.
+            x: Column index of the clicked cell
+            y: Row index of the clicked cell
         """
         if self.click_callback:
             self.click_callback(x, y)
 
     def _on_cell_hover(self, x, y, enter):
-        """Interner Handler für Hover-Ereignisse über Zellen.
+        """
+        Internal handler for cell hover events.
 
         Args:
-            x (int): Spaltenindex.
-            y (int): Zeilenindex.
-            enter (bool): True bei Enter, False bei Leave.
+            x: Column index of the hovered cell
+            y: Row index of the hovered cell
+            enter: True when mouse enters cell, False when mouse leaves
         """
         if not self._hover_enabled:
             return
@@ -76,13 +85,14 @@ class BoardView:
             self.hover_callback(x, y, enter)
 
     def update(self, highlight_cells=None, highlight_invalid_cells=None, ship_hover_cells=None, ship_selected_cells=None):
-        """Aktualisiert die Darstellung der Zellen.
+        """
+        Update the visual representation of all cells in the board.
 
         Args:
-            highlight_cells (set[tuple[int,int]] | None): Menge gültiger Hover-Zellen.
-            highlight_invalid_cells (set[tuple[int,int]] | None): Menge ungültiger Hover-Zellen.
-            ship_hover_cells (set[tuple[int,int]] | None): Menge der Zellen mit Schiff-Hover.
-            ship_selected_cells (set[tuple[int,int]] | None): Menge der Zellen mit ausgewählten Schiffen.
+            highlight_cells: Set of valid hover cell coordinates (default: None)
+            highlight_invalid_cells: Set of invalid hover cell coordinates (default: None)
+            ship_hover_cells: Set of ship hover cell coordinates (default: None)
+            ship_selected_cells: Set of selected ship cell coordinates (default: None)
         """
         # Falls das Board gewechselt wurde, Zellen neu bauen
         if len(self.cells_ui) != self.board.height or len(self.cells_ui[0]) != self.board.width:
@@ -99,15 +109,21 @@ class BoardView:
                 )
 
     def set_hover_enabled(self, enabled: bool):
-        """Aktiviert/Deaktiviert Hover-Markierungen.
+        """
+        Enable or disable hover highlighting for this board.
 
         Args:
-            enabled (bool): True, um Hover zu erlauben.
+            enabled: True to enable hover effects, False to disable
         """
         self._hover_enabled = enabled
 
     def set_enabled(self, enabled: bool):
-        """Aktiviert/Deaktiviert alle Zellen dieses Boards."""
+        """
+        Enable or disable all cells in this board for user interaction.
+
+        Args:
+            enabled: True to enable cell interactions, False to disable
+        """
         for row in self.cells_ui:
             for cell_ui in row:
                 cell_ui.set_enabled(enabled)

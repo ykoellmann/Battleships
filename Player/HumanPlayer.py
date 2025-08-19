@@ -1,10 +1,7 @@
-from typing import TYPE_CHECKING
-
 from Player.Player import Player
 
-if TYPE_CHECKING:
-    from Board.Board import Board
-    from Objects.GameObject import GameObject
+from Board.Board import Board
+from Objects.GameObject import GameObject
 
 
 class HumanPlayer(Player):

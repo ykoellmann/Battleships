@@ -1,12 +1,14 @@
 import copy
 import random
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import List, Tuple, Optional
 
+from Board.Board import Board
+from constants import BoardConfig
 from Utils.Orientation import Orientation
 
 
-class Player:
+class Player(ABC):
     """
     Abstract base class for all players in the Battleships game.
     
@@ -19,7 +21,7 @@ class Player:
         objects (List): List of game objects (ships, mines) owned by this player
     """
     
-    def __init__(self, name: str, board) -> None:
+    def __init__(self, name: str, board: Board) -> None:
         """
         Initialize a new Player instance.
         
@@ -56,7 +58,7 @@ class Player:
         """
         return all(obj.is_destroyed for obj in self.objects)
 
-    def get_all_valid_positions(self, board, ship_length: int, game_object) -> List[Tuple[int, int, str]]:
+    def _get_all_valid_positions(self, board, ship_length: int, game_object) -> List[Tuple[int, int, str]]:
         """
         Get all valid positions for placing a game object (legacy method).
         
@@ -69,14 +71,14 @@ class Player:
             List of tuples (row, col, direction) representing valid positions
         """
         positions = []
-        for row in range(10):
-            for col in range(10):
-                for direction in ["horizontal", "vertical"]:
-                    if self.can_place(board, row, col, ship_length, direction, game_object):
+        for row in range(BoardConfig.DEFAULT_HEIGHT):
+            for col in range(BoardConfig.DEFAULT_WIDTH):
+                for direction in [Orientation.HORIZONTAL.value, Orientation.VERTICAL.value]:
+                    if self._can_place(board, row, col, ship_length, direction, game_object):
                         positions.append((row, col, direction))
         return positions
 
-    def can_place(self, board, row: int, col: int, ship_length: int, direction: str, game_object) -> bool:
+    def _can_place(self, board, row: int, col: int, ship_length: int, direction: str, game_object) -> bool:
         """
         Check if a game object can be placed at the specified position.
         
@@ -92,14 +94,14 @@ class Player:
             bool: True if placement is valid, False otherwise
         """
         # Set orientation and position temporarily
-        if direction == "horizontal":
+        if direction == Orientation.HORIZONTAL.value:
             game_object.orientation = Orientation.HORIZONTAL
         else:
             game_object.orientation = Orientation.VERTICAL
         game_object.set_position(row, col)
         return board.can_place_object(game_object)
 
-    def place_safely(self, board, ship_length: int, game_object) -> bool:
+    def _place_safely(self, board, ship_length: int, game_object) -> bool:
         """
         Place a game object safely at a random valid position.
         
@@ -111,11 +113,11 @@ class Player:
         Returns:
             bool: True if placement was successful, False otherwise
         """
-        valid_positions = self.get_all_valid_positions(board, ship_length, game_object)
+        valid_positions = self._get_all_valid_positions(board, ship_length, game_object)
         if not valid_positions:
             return False
         row, col, direction = random.choice(valid_positions)
-        if direction == "horizontal":
+        if direction == Orientation.HORIZONTAL.value:
             game_object.orientation = Orientation.HORIZONTAL
         else:
             game_object.orientation = Orientation.VERTICAL
@@ -133,7 +135,7 @@ class Player:
             bool: True if placement was successful, False otherwise
         """
         ship_length = len(game_object.coordinates)
-        placed = self.place_safely(self.board, ship_length, game_object)
+        placed = self._place_safely(self.board, ship_length, game_object)
         self.objects.append(game_object)
         # Falls keine Position gefunden, mache nichts (sollte aber nie passieren)
         return placed

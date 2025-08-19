@@ -1,17 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-
-class GameSettings:
-    def __init__(self):
-        self.p1_type = "Mensch"
-        self.p2_type = "Computer"
-        self.p1_name = "Spieler 1"
-        self.p2_name = "Spieler 2"
-        self.p1_difficulty = "Leicht"
-        self.p2_difficulty = "Leicht"
-        self.mode = "Normal"
-        self.game_objects = None  # Wird später von Game gesetzt
+from constants import PlayerType, Difficulty, GameMode, GameConstants
+from Models.GameSettings import GameSettings
 
 
 class SettingsView(tk.Frame):
@@ -33,7 +24,7 @@ class SettingsView(tk.Frame):
         # Spieler 1
         tk.Label(self, text="Spieler 1:").grid(row=1, column=0, sticky="w")
         self.p1_type = tk.StringVar(value=self.settings.p1_type)
-        self.p1_type_combo = ttk.Combobox(self, textvariable=self.p1_type, values=["Mensch", "Computer"], state="readonly", width=10)
+        self.p1_type_combo = ttk.Combobox(self, textvariable=self.p1_type, values=GameConstants.PLAYER_TYPE_OPTIONS, state="readonly", width=10)
         self.p1_type_combo.grid(row=1, column=1, sticky="ew")
         self.p1_type_combo.bind("<<ComboboxSelected>>", lambda e: self._update_player_fields(1))
 
@@ -41,12 +32,12 @@ class SettingsView(tk.Frame):
         self.p1_name_entry = tk.Entry(self, textvariable=self.p1_name_var)
 
         self.p1_diff_var = tk.StringVar(value=self.settings.p1_difficulty)
-        self.p1_diff_combo = ttk.Combobox(self, textvariable=self.p1_diff_var, values=["Leicht", "Schwer", "Unmöglich"], state="readonly", width=10)
+        self.p1_diff_combo = ttk.Combobox(self, textvariable=self.p1_diff_var, values=GameConstants.DIFFICULTY_OPTIONS, state="readonly", width=10)
 
         # Spieler 2
         tk.Label(self, text="Spieler 2:").grid(row=2, column=0, sticky="w")
         self.p2_type = tk.StringVar(value=self.settings.p2_type)
-        self.p2_type_combo = ttk.Combobox(self, textvariable=self.p2_type, values=["Mensch", "Computer"], state="readonly", width=10)
+        self.p2_type_combo = ttk.Combobox(self, textvariable=self.p2_type, values=GameConstants.PLAYER_TYPE_OPTIONS, state="readonly", width=10)
         self.p2_type_combo.grid(row=2, column=1, sticky="ew")
         self.p2_type_combo.bind("<<ComboboxSelected>>", lambda e: self._update_player_fields(2))
 
@@ -54,13 +45,13 @@ class SettingsView(tk.Frame):
         self.p2_name_entry = tk.Entry(self, textvariable=self.p2_name_var)
 
         self.p2_diff_var = tk.StringVar(value=self.settings.p2_difficulty)
-        self.p2_diff_combo = ttk.Combobox(self, textvariable=self.p2_diff_var, values=["Leicht", "Schwer", "Unmöglich"], state="readonly", width=10)
+        self.p2_diff_combo = ttk.Combobox(self, textvariable=self.p2_diff_var, values=GameConstants.DIFFICULTY_OPTIONS, state="readonly", width=10)
 
         # Spielmodus
         tk.Label(self, text="Spielmodus:").grid(row=3, column=0, sticky="w")
         self.mode_var = tk.StringVar(value=self.settings.mode)
-        tk.Radiobutton(self, text="Normal", variable=self.mode_var, value="Normal").grid(row=3, column=1, sticky="w")
-        tk.Radiobutton(self, text="Erweitert", variable=self.mode_var, value="Erweitert").grid(row=3, column=2, sticky="w")
+        tk.Radiobutton(self, text="Normal", variable=self.mode_var, value=GameMode.STANDARD.value).grid(row=3, column=1, sticky="w")
+        tk.Radiobutton(self, text="Erweitert", variable=self.mode_var, value=GameMode.EXTENDED.value).grid(row=3, column=2, sticky="w")
 
         # Button Spiel starten
         start_btn = tk.Button(self, text="Spiel starten", command=self._start_game)
@@ -73,18 +64,23 @@ class SettingsView(tk.Frame):
         self.columnconfigure(1, weight=1)
 
     def _update_player_fields(self, player_num):
-        """Zeigt Namensfeld oder Schwierigkeitsfeld abhängig vom Typ."""
+        """
+        Show name field or difficulty field depending on player type.
+        
+        Args:
+            player_num: Player number (1 or 2) to update fields for
+        """
         if player_num == 1:
             self.p1_name_entry.grid_forget()
             self.p1_diff_combo.grid_forget()
-            if self.p1_type.get() == "Mensch":
+            if self.p1_type.get() == PlayerType.HUMAN.value:
                 self.p1_name_entry.grid(row=1, column=2, sticky="ew")
             else:
                 self.p1_diff_combo.grid(row=1, column=2, sticky="ew")
         elif player_num == 2:
             self.p2_name_entry.grid_forget()
             self.p2_diff_combo.grid_forget()
-            if self.p2_type.get() == "Mensch":
+            if self.p2_type.get() == PlayerType.HUMAN.value:
                 self.p2_name_entry.grid(row=2, column=2, sticky="ew")
             else:
                 self.p2_diff_combo.grid(row=2, column=2, sticky="ew")

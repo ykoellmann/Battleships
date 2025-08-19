@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Callable, Optional, TYPE_CHECKING
+from typing import List, Callable, Optional
 
 from Utils.GameState import GameState
 from Game.GamePhase.PhaseConfig import PhaseConfig
 
-if TYPE_CHECKING:
-    from Player.Player import Player
-    from Game.SettingsView import GameSettings
+from Player.Player import Player
+from Game.SettingsView import GameSettings
 
 
 class GamePhase(ABC):

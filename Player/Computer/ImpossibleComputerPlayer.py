@@ -1,10 +1,9 @@
 import random
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Tuple, Optional
 
 from Player.Computer.ComputerPlayer import ComputerPlayer
 
-if TYPE_CHECKING:
-    from Board.Board import Board
+from Board.Board import Board
 
 
 class ImpossibleComputerPlayer(ComputerPlayer):

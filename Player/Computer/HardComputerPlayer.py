@@ -1,11 +1,10 @@
 import random
-from typing import List, Optional, Tuple, Union, TYPE_CHECKING
+from typing import List, Optional, Tuple
 
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Utils.Orientation import Orientation
 
-if TYPE_CHECKING:
-    from Board.Board import Board
+from Board.Board import Board
 
 
 class HardComputerPlayer(ComputerPlayer):

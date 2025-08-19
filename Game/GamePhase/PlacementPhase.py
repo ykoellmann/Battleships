@@ -1,5 +1,5 @@
 import copy
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional
 
 from Game.GamePhase.GamePhase import GamePhase
 from Game.GamePhase.PhaseConfig import PhaseConfig

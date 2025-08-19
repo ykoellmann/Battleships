@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, List, TYPE_CHECKING
+from typing import Tuple, List
 
+from Board.Board import Board
 from Player.Player import Player
 
-if TYPE_CHECKING:
-    from Board.Board import Board
-    from Objects.GameObject import GameObject
+from Objects.GameObject import GameObject
 
 
 class ComputerPlayer(Player, ABC):

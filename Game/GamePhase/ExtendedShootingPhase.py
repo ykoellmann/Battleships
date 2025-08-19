@@ -3,6 +3,7 @@ import random
 from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.ShootingPhase import ShootingPhase
 from Game.GamePhase.PhaseConfig import PhaseConfig
+from Objects.Mine import Mine
 from Objects.Ships.Ship import Ship
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Player.Computer.HardComputerPlayer import HardComputerPlayer
@@ -24,12 +25,17 @@ class ExtendedShootingPhase(ShootingPhase):
         self.shot = 0
         self.selected_ship = None  # Temporäre Auswahl vor Bestätigung
         self.active_ship = None    # Aktives Schiff für UI-Hervorhebung während des Zugs
+        self.selection_done = False
+        self.hit_mine = False
 
     def handle_cell_click(self, x, y, is_own_board):
         if not is_own_board:
+            # Prevent shooting if no ship is confirmed for shooting
+            if not self.selection_done:
+                return
             return super().handle_cell_click(x, y, is_own_board)
 
-        clicked_object = self.current_player.board.get_cell(x,y).object
+        clicked_object: Ship = self.current_player.board.get_cell(x,y).object
 
         self.new_shooting_ship(clicked_object)
         return
@@ -38,6 +44,19 @@ class ExtendedShootingPhase(ShootingPhase):
         result = self.other_player.board.shoot_at(x, y)
         if self.shooting_ship:
             self.shot += 1
+
+        # Check if a mine was hit and destroy the shooting ship
+        if result.hit and isinstance(result.hit_object, Mine) and self.shooting_ship:
+            self.shooting_ship.destroy()
+            # Mark all cells of the destroyed ship as shot so it displays as destroyed in UI
+            for ship_x, ship_y in self.shooting_ship.coordinates:
+                mine_result = self.current_player.board.shoot_at(ship_x, ship_y)
+                if isinstance(self.other_player, HardComputerPlayer):
+                    self.other_player.process_shot_result(
+                        ship_x, ship_y, mine_result.hit, mine_result.is_destroyed,
+                        mine_result.hit_object.coordinates if mine_result.hit_object else []
+                    )
+                self.hit_mine = True
 
         if isinstance(self.current_player, HardComputerPlayer):
             self.current_player.process_shot_result(
@@ -49,7 +68,7 @@ class ExtendedShootingPhase(ShootingPhase):
 
     def next_turn(self, hit):
         size = self.shooting_ship.size if self.shooting_ship else 0
-        if (self.shooting_ship is None and self.shot == 1) or self.shot >= size:
+        if (self.shooting_ship is None and self.shot == 1) or self.shot >= size or self.hit_mine:
             self.next_player()
 
         if self.is_over():
@@ -70,6 +89,7 @@ class ExtendedShootingPhase(ShootingPhase):
         self.selected_ship = None
         self.active_ship = None  # UI-Hervorhebung beim Spielerwechsel zurücksetzen
         self.shot = 0
+        self.hit_mine = False
         super().next_player()
 
 
@@ -112,8 +132,9 @@ class ExtendedShootingPhase(ShootingPhase):
         """
         Confirm the currently selected ship as the shooting ship.
         """
-        if self.selected_ship and self.shot == 0:
+        if self.shot == 0:
             self.shooting_ship = self.selected_ship
             self.active_ship = self.selected_ship  # Für UI-Hervorhebung beibehalten
             self.selected_ship = None  # Temporäre Auswahl zurücksetzen
             self.shot = 0
+            self.selection_done = True

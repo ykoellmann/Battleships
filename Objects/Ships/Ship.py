@@ -33,3 +33,12 @@ class Ship(GameObject):
     @property
     def is_destroyed(self):
         return self.hits >= self.size
+
+    def destroy(self):
+        """
+        Instantly destroy the ship by setting hits to maximum size.
+        
+        This method is used when a ship hits a mine and needs to be 
+        immediately destroyed regardless of previous damage.
+        """
+        self.hits = self.size

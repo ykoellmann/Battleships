@@ -43,6 +43,7 @@ class BoardConfig:
 class UIConfig:
     """Configuration constants for the user interface."""
     DEFAULT_PADDING = 10
+    DEFAULT_CELL_SIZE = 32
     CELL_SIZE_DIVISOR = 10
     COMPUTER_TURN_DELAY_MS = 1000
     BUTTON_ROW_ORIENTATION = 3
