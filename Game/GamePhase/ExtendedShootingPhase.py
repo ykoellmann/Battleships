@@ -22,7 +22,8 @@ class ExtendedShootingPhase(ShootingPhase):
         super().__init__(config)
         self.shooting_ship = None
         self.shot = 0
-        self.selected_ship = None  # Currently selected ship for UI highlighting
+        self.selected_ship = None  # Temporäre Auswahl vor Bestätigung
+        self.active_ship = None    # Aktives Schiff für UI-Hervorhebung während des Zugs
 
     def handle_cell_click(self, x, y, is_own_board):
         if not is_own_board:
@@ -67,6 +68,7 @@ class ExtendedShootingPhase(ShootingPhase):
     def next_player(self):
         self.shooting_ship = None
         self.selected_ship = None
+        self.active_ship = None  # UI-Hervorhebung beim Spielerwechsel zurücksetzen
         self.shot = 0
         super().next_player()
 
@@ -78,6 +80,7 @@ class ExtendedShootingPhase(ShootingPhase):
         if random_objects:
             random_object = random.choice(random_objects)
             self.new_shooting_ship(random_object)
+            self.confirm_ship_selection()
 
         x, y = target
         # comp_hit, _ = self.execute_turn(x, y)
@@ -111,5 +114,6 @@ class ExtendedShootingPhase(ShootingPhase):
         """
         if self.selected_ship and self.shot == 0:
             self.shooting_ship = self.selected_ship
-            self.selected_ship = None  # Clear selection after confirmation
+            self.active_ship = self.selected_ship  # Für UI-Hervorhebung beibehalten
+            self.selected_ship = None  # Temporäre Auswahl zurücksetzen
             self.shot = 0

@@ -5,6 +5,11 @@ from inspect import isclass
 from tkinter import ttk, messagebox
 from typing import List, Type
 
+from constants import (
+    GameMode, PlayerType, Difficulty, ButtonType, UIConfig, 
+    MessageConstants, ButtonLabels, GameConstants
+)
+
 from Board.Board import Board
 from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.ExtendedPlacementPhase import ExtendedPlacementPhase
@@ -102,7 +107,7 @@ class GameUI:
         self.ship_selected_cells = set()
         
         settings = self.settings_view.settings
-        if settings.mode == "Erweitert":
+        if settings.mode == GameMode.EXTENDED.value:
             game_phase_class = ExtendedPlacementPhase
         else:
             game_phase_class = PlacementPhase
@@ -148,10 +153,10 @@ class GameUI:
         if self.orientation_button is None:
             self.orientation_button = ttk.Button(
                 self.window,
-                text="Ausrichtung wechseln",
+                text=ButtonLabels.TOGGLE_ORIENTATION,
                 command=lambda: self.game_phase.toggle_orientation() if isinstance(self.game_phase, PlacementPhase) else None,
             )
-            self.orientation_button.grid(row=3, column=0, columnspan=2, pady=5)
+            self.orientation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
         state = "disabled"
         if enabled:
@@ -163,10 +168,10 @@ class GameUI:
         if self.confirmation_button is None:
             self.confirmation_button = ttk.Button(
                 self.window,
-                text="Auswahl bestätigen",
+                text=ButtonLabels.CONFIRM_SELECTION,
                 command=lambda: self.game_phase.confirm_ship_selection() if isinstance(self.game_phase, ExtendedShootingPhase) else None,
             )
-            self.confirmation_button.grid(row=3, column=0, columnspan=2, pady=5)
+            self.confirmation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
         state = "disabled"
         if enabled:
@@ -178,10 +183,10 @@ class GameUI:
         if self.auto_place_button is None:
             self.auto_place_button = ttk.Button(
                 self.window,
-                text="Alle Schiffe automatisch platzieren",
+                text=ButtonLabels.AUTO_PLACE_ALL,
                 command=self._auto_place_all_ships,
             )
-            self.auto_place_button.grid(row=4, column=0, columnspan=2, pady=5)
+            self.auto_place_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
         state = "disabled"
         if enabled:
@@ -410,9 +415,12 @@ class GameUI:
         if not isinstance(self.game_phase, ExtendedShootingPhase):
             return
         
-        # Update selected ship highlighting
-        if self.game_phase.selected_ship:
-            self.ship_selected_cells = set(self.game_phase.selected_ship.coordinates)
+        # Update selected ship highlighting - verwende active_ship statt selected_ship
+        active_ship = (self.game_phase.active_ship if self.game_phase.active_ship 
+                       else self.game_phase.selected_ship)
+        
+        if active_ship:
+            self.ship_selected_cells = set(active_ship.coordinates)
         else:
             self.ship_selected_cells = set()
         

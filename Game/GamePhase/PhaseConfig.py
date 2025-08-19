@@ -29,7 +29,7 @@ class PhaseConfig:
     next_phase_callback: Callable
     settings: GameSettings = None
     
-    def with_changes(self, **kwargs) -> 'PhaseConfig':
+    def with_changes(self, **kwargs) -> PhaseConfig:
         """
         Create a new PhaseConfig instance with specified changes.
         

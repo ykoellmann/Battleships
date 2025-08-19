@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from Board.Cell import Cell, CellState
+from constants import CellColors, UIConfig
 
 
 class CellView:
@@ -17,8 +18,8 @@ class CellView:
 
         self.button = tk.Button(
             parent,
-            width=size // 10,
-            height=size // 20,
+            width=size // UIConfig.CELL_SIZE_DIVISOR,
+            height=size // (UIConfig.CELL_SIZE_DIVISOR * 2),
             command=self._on_click,
             borderwidth=0.5,
             highlightthickness=0,
@@ -44,29 +45,29 @@ class CellView:
         """
         # Reihenfolge: Ungültiges Hover > Ship Selected > Ship Hover > Gültiges Hover > Treffer > Schiff > Standard
         if highlight_invalid:
-            self.button.config(bg="#ff5555", text="")
+            self.button.config(bg=CellColors.INVALID_HIGHLIGHT, text="")
             return
         if ship_selected:
-            self.button.config(bg="#00ff00", text="")  # Grün für ausgewähltes Schiff
+            self.button.config(bg=CellColors.SHIP_SELECTED, text="")  # Grün für ausgewähltes Schiff
             return
         if ship_hover:
-            self.button.config(bg="#0080ff", text="")  # Blau für Hover über Schiff
+            self.button.config(bg=CellColors.SHIP_HOVER, text="")  # Blau für Hover über Schiff
             return
         if highlight:
-            self.button.config(bg="#b3e6ff", text="")
+            self.button.config(bg=CellColors.VALID_HIGHLIGHT, text="")
             return
 
         # match/case über den von Cell gelieferten Darstellungszustand
         match self.cell.state:
             case CellState.HIT_SHIP:
-                self.button.config(text="", bg="red")
+                self.button.config(text="", bg=CellColors.HIT_SHIP)
             case CellState.HIT_MINE:
-                self.button.config(text="💣", bg="black", fg="white")
+                self.button.config(text="💣", bg=CellColors.HIT_MINE, fg="white")
             case CellState.MISS:
-                self.button.config(text="", bg="black")
+                self.button.config(text="", bg=CellColors.MISS)
             case CellState.SHIP:
-                self.button.config(text="", bg="gray")
+                self.button.config(text="", bg=CellColors.SHIP)
             case CellState.MINE:
-                self.button.config(text="", bg="orange")
+                self.button.config(text="", bg=CellColors.MINE)
             case CellState.EMPTY:
-                self.button.config(text="", bg="white")
+                self.button.config(text="", bg=CellColors.EMPTY)
