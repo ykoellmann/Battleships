@@ -56,16 +56,70 @@ class SettingsView(tk.Frame):
         tk.Radiobutton(self, text="Erweitert", variable=self.mode_var, value=GameMode.EXTENDED.value,
                        bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG, selectcolor=UIColors.BUTTON_BG).grid(row=3, column=2, sticky="w")
 
-        # Button Spiel starten
-        start_btn = tk.Button(self, text="Spiel starten", command=self._start_game,
+        # Buttons row - Log, Farblegende, Statistiken links, Spiel starten rechts
+        button_frame = tk.Frame(self, bg=UIColors.FRAME_BG)
+        button_frame.grid(row=4, column=0, columnspan=3, pady=10, sticky="ew")
+        
+        # Left side buttons (Log, Farblegende, Statistiken)
+        self.log_button = None
+        self.legend_button = None
+        self.statistics_button = None
+        
+        # Right side button (Spiel starten)
+        start_btn = tk.Button(button_frame, text="Spiel starten", command=self._start_game,
                               bg=UIColors.BUTTON_BG, fg=UIColors.BUTTON_FG, activebackground=UIColors.BUTTON_ACTIVE_BG)
-        start_btn.grid(row=4, column=0, columnspan=3, pady=10)
+        start_btn.pack(side=tk.RIGHT, padx=5)
+        
+        # Configure button frame to expand properly
+        button_frame.columnconfigure(0, weight=1)
+        
+        # Store button_frame reference for later use
+        self.button_frame = button_frame
 
         # Initialfelder setzen
         self._update_player_fields(1)
         self._update_player_fields(2)
 
         self.columnconfigure(1, weight=1)
+
+    def create_log_button(self, command):
+        """Creates the log window button if it doesn't exist."""
+        if self.log_button is None:
+            self.log_button = tk.Button(
+                self.button_frame,
+                text="Spiel-Log öffnen",
+                command=command,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
+            )
+            self.log_button.pack(side=tk.LEFT, padx=5)
+
+    def create_legend_button(self, command):
+        """Creates the color legend button if it doesn't exist."""
+        if self.legend_button is None:
+            self.legend_button = tk.Button(
+                self.button_frame,
+                text="Farblegende",
+                command=command,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
+            )
+            self.legend_button.pack(side=tk.LEFT, padx=5)
+
+    def create_statistics_button(self, command):
+        """Creates the statistics window button if it doesn't exist."""
+        if self.statistics_button is None:
+            self.statistics_button = tk.Button(
+                self.button_frame,
+                text="Statistiken",
+                command=command,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
+            )
+            self.statistics_button.pack(side=tk.LEFT, padx=5)
 
     def _update_player_fields(self, player_num):
         """

@@ -24,6 +24,7 @@ from src.Views.SettingsView import SettingsView, GameSettings
 from src.Utils.GameLogger import GameLogger
 from src.Views.LogWindow import LogWindow
 from src.Views.ColorLegendWindow import ColorLegendWindow
+from src.Views.StatisticsWindow import StatisticsWindow
 from src.Utils.GameState import GameState
 
 
@@ -89,11 +90,13 @@ class GameUI:
         # Initialize color legend window
         self.color_legend_window = ColorLegendWindow(self.window)
         
-        # Log window button
-        self.log_button = None
+        # Initialize statistics window
+        self.statistics_window = StatisticsWindow(self.window)
         
-        # Color legend button
-        self.legend_button = None
+        # Create the three buttons in SettingsView immediately
+        self.settings_view.create_log_button(self.log_window.open_window)
+        self.settings_view.create_legend_button(self.color_legend_window.open_window)
+        self.settings_view.create_statistics_button(self.statistics_window.open_window)
 
     def _configure_ttk_styles(self):
         """Configure TTK styles for brownish theme."""
@@ -269,11 +272,10 @@ class GameUI:
             board_view.board = self.game_phase.players[idx].board
             board_view.update()
 
-        # Create log button
-        self._create_log_button()
-        
-        # Create color legend button
-        self._create_legend_button()
+        # Deactivate Buttons
+        self._toggle_auto_place_button(False)
+        self._toggle_orientation_button(False)
+        self._toggle_auto_place_button(False)
         
         # Log game start
         GameLogger.log_game_start(player1.name, player2.name)
@@ -293,98 +295,80 @@ class GameUI:
         self._toggle_orientation_button(True)
 
     def _toggle_orientation_button(self, enabled: bool):
-        """Stellt sicher, dass der Orientierungsbutton existiert und aktiviert ihn."""
-        if self.orientation_button is None:
-            self.orientation_button = tk.Button(
-                self.button_frame,
-                text=ButtonLabels.TOGGLE_ORIENTATION,
-                command=lambda: self.game_phase.toggle_orientation(),
-                bg=UIColors.BUTTON_BG,
-                fg=UIColors.BUTTON_FG,
-                activebackground=UIColors.BUTTON_ACTIVE_BG
-            )
-            self.orientation_button.pack(side=tk.LEFT, padx=5)
-
-        state = "normal" if enabled else "disabled"
-        self.orientation_button.config(state=state)
+        """Verwaltet Erstellung/Löschung und Aktivierung des Orientierungsbuttons basierend auf enabled Parameter."""
+        if enabled:
+            # Button erstellen falls nicht vorhanden
+            if self.orientation_button is None:
+                self.orientation_button = tk.Button(
+                    self.button_frame,
+                    text=ButtonLabels.TOGGLE_ORIENTATION,
+                    command=lambda: self.game_phase.toggle_orientation(),
+                    bg=UIColors.BUTTON_BG,
+                    fg=UIColors.BUTTON_FG,
+                    activebackground=UIColors.BUTTON_ACTIVE_BG
+                )
+                self.orientation_button.pack(side=tk.LEFT, padx=5)
+            self.orientation_button.config(state="normal")
+        else:
+            # Button entfernen falls vorhanden
+            if self.orientation_button is not None:
+                self.orientation_button.destroy()
+                self.orientation_button = None
 
     def _toggle_confirmation_button(self, enabled: bool):
-        """Stellt sicher, dass der Bestätigungsbutton für Schiffauswahl existiert und aktiviert ihn."""
-        if self.confirmation_button is None:
-            self.confirmation_button = tk.Button(
-                self.button_frame,
-                text=ButtonLabels.CONFIRM_SELECTION,
-                command=lambda: self.game_phase.confirm_ship_selection(),
-                bg=UIColors.BUTTON_BG,
-                fg=UIColors.BUTTON_FG,
-                activebackground=UIColors.BUTTON_ACTIVE_BG
-            )
-            self.confirmation_button.pack(side=tk.LEFT, padx=5)
-
-        state = "normal" if enabled else "disabled"
-        self.confirmation_button.config(state=state)
+        """Verwaltet Erstellung/Löschung und Aktivierung des Bestätigungsbuttons basierend auf enabled Parameter."""
+        if enabled:
+            # Button erstellen falls nicht vorhanden
+            if self.confirmation_button is None:
+                self.confirmation_button = tk.Button(
+                    self.button_frame,
+                    text=ButtonLabels.CONFIRM_SELECTION,
+                    command=lambda: self.game_phase.confirm_ship_selection(),
+                    bg=UIColors.BUTTON_BG,
+                    fg=UIColors.BUTTON_FG,
+                    activebackground=UIColors.BUTTON_ACTIVE_BG
+                )
+                self.confirmation_button.pack(side=tk.LEFT, padx=5)
+            self.confirmation_button.config(state="normal")
+        else:
+            # Button entfernen falls vorhanden
+            if self.confirmation_button is not None:
+                self.confirmation_button.destroy()
+                self.confirmation_button = None
 
     def _toggle_auto_place_button(self, enabled: bool):
-        """Stellt sicher, dass der Auto-Platzierungsbutton existiert und aktiviert ihn."""
-        if self.auto_place_button is None:
-            self.auto_place_button = tk.Button(
-                self.button_frame,
-                text=ButtonLabels.AUTO_PLACE_ALL,
-                command=self._auto_place_all_ships,
-                bg=UIColors.BUTTON_BG,
-                fg=UIColors.BUTTON_FG,
-                activebackground=UIColors.BUTTON_ACTIVE_BG
-            )
-            self.auto_place_button.pack(side=tk.LEFT, padx=5)
-
-        state = "normal" if enabled else "disabled"
-        self.auto_place_button.config(state=state)
+        """Verwaltet Erstellung/Löschung und Aktivierung des Auto-Platzierungsbuttons basierend auf enabled Parameter."""
+        if enabled:
+            # Button erstellen falls nicht vorhanden
+            if self.auto_place_button is None:
+                self.auto_place_button = tk.Button(
+                    self.button_frame,
+                    text=ButtonLabels.AUTO_PLACE_ALL,
+                    command=self._auto_place_all_ships,
+                    bg=UIColors.BUTTON_BG,
+                    fg=UIColors.BUTTON_FG,
+                    activebackground=UIColors.BUTTON_ACTIVE_BG
+                )
+                self.auto_place_button.pack(side=tk.LEFT, padx=5)
+            self.auto_place_button.config(state="normal")
+        else:
+            # Button entfernen falls vorhanden
+            if self.auto_place_button is not None:
+                self.auto_place_button.destroy()
+                self.auto_place_button = None
     
-    def _create_log_button(self):
-        """Creates the log window button if it doesn't exist."""
-        if self.log_button is None:
-            self.log_button = tk.Button(
-                self.button_frame,
-                text="Spiel-Log öffnen",
-                command=self.log_window.open_window,
-                bg=UIColors.BUTTON_BG,
-                fg=UIColors.BUTTON_FG,
-                activebackground=UIColors.BUTTON_ACTIVE_BG
-            )
-            self.log_button.pack(side=tk.LEFT, padx=5)
-    
-    def _create_legend_button(self):
-        """Creates the color legend button if it doesn't exist."""
-        if self.legend_button is None:
-            self.legend_button = tk.Button(
-                self.button_frame,
-                text="Farblegende",
-                command=self.color_legend_window.open_window,
-                bg=UIColors.BUTTON_BG,
-                fg=UIColors.BUTTON_FG,
-                activebackground=UIColors.BUTTON_ACTIVE_BG
-            )
-            self.legend_button.pack(side=tk.LEFT, padx=5)
 
     def _show_button(self, button_type: str):
         """Zeigt den entsprechenden Button an und versteckt den anderen."""
-        if button_type == "orientation":
-            if self.confirmation_button is not None:
-                self.confirmation_button.grid_remove()
-                self.confirmation_button = None
-            self._toggle_orientation_button(True)
-        elif button_type == "confirmation":
-            if self.orientation_button is not None:
-                self.orientation_button.grid_remove()
-                self.orientation_button = None
-            self._toggle_confirmation_button(True)
+        if button_type == "confirmation":
+            self._toggle_orientation_button(False)  # Verstecke Orientierungsbutton
+            self._toggle_confirmation_button(True)  # Zeige Bestätigungsbutton
+        elif button_type == "orientation":
+            self._toggle_confirmation_button(False)  # Verstecke Bestätigungsbutton
+            self._toggle_orientation_button(True)    # Zeige Orientierungsbutton
         elif button_type == "none":
-            if self.orientation_button is not None:
-                self.orientation_button.grid_remove()
-                self.orientation_button = None
-            if self.confirmation_button is not None:
-                self.confirmation_button.grid_remove()
-                self.confirmation_button = None
+            self._toggle_orientation_button(False)   # Verstecke Orientierungsbutton
+            self._toggle_confirmation_button(False)  # Verstecke Bestätigungsbutton
 
 
     def _auto_place_all_ships(self):
@@ -669,10 +653,9 @@ class GameUI:
             self._show_button("none")
         
         # Hide auto-placement button
-        if self.auto_place_button is not None:
-            self.auto_place_button.grid_remove()
-            self.auto_place_button = None
-        
+        self._toggle_auto_place_button(False)
+        self._toggle_orientation_button(False)
+
         # Hover-State
         for board_view in self.board_views:
             board_view.set_hover_enabled(True)
@@ -690,9 +673,7 @@ class GameUI:
         
         # Button-Updates
         self._toggle_orientation_button(False)
-        if self.auto_place_button is not None:
-            self.auto_place_button.grid_remove()
-            self.auto_place_button = None
+        self._toggle_auto_place_button(False)
 
     def _update_ui_pregame(self):
         """UI-Updates für den Pre-Game Zustand."""
@@ -702,11 +683,8 @@ class GameUI:
             board_view.set_enabled(False)
         
         self.current_ship_label.config(text="")
-        if self.orientation_button is not None:
-            self._toggle_orientation_button(False)
-        if self.auto_place_button is not None:
-            self.auto_place_button.grid_remove()
-            self.auto_place_button = None
+        self._toggle_orientation_button(False)
+        self._toggle_auto_place_button(False)
 
     def update_boards(self):
         """Aktualisiert alle Board-Ansichten basierend auf dem aktuellen Spielzustand."""
