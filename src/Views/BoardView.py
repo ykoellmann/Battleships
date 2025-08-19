@@ -1,6 +1,6 @@
 from src.Core.Board.Board import Board
 from src.Views.CellView import CellView
-from src.Utils.constants import UIConfig, UIColors
+from src.Utils.Constants import UIConfig, UIColors
 import tkinter as tk
 
 class BoardView:

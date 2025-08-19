@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from src.Utils.GameLogger import GameLogger
-from src.Utils.constants import UIColors
+from src.Utils.Constants import UIColors
 
 
 class LogWindow:

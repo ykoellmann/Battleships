@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from src.Core.Entities.GameObject import GameObject
 from src.Core.Entities.Ships.Ship import Ship
 from src.Core.Entities.Mine import Mine
+from src.Utils.Database.DatabaseManager import DatabaseManager
 
 
 @dataclass
@@ -34,14 +35,27 @@ class GameLogger:
     
     Captures and stores timestamped log entries for all game actions including
     ship placement, shooting, hits, misses, ship destruction, and mine explosions.
+    Also stores user behavior data in SQLite database for AI learning.
     
     All methods are static and can be called directly without instantiation.
     
     Class Attributes:
         _entries: List of all log entries in chronological order
+        _db_manager: DatabaseManager instance for persistent data storage
     """
     
     _entries: List[LogEntry] = []
+    _db_manager: Optional[DatabaseManager] = None
+    
+    @staticmethod
+    def initialize_database(db_path: str = None):
+        """
+        Initialize database connection for persistent logging.
+        
+        Args:
+            db_path: Path to the SQLite database file (optional)
+        """
+        GameLogger._db_manager = DatabaseManager(db_path) if db_path else DatabaseManager()
     
     @staticmethod
     def _add_entry(player_name: str, action: str, result: str):
@@ -64,7 +78,7 @@ class GameLogger:
     @staticmethod
     def log_ship_placement(player_name: str, ship: Ship, x: int, y: int, success: bool):
         """
-        Log ship placement attempt.
+        Log ship placement attempt and store in database for learning.
         
         Args:
             player_name: Name of the player placing the ship
@@ -77,12 +91,16 @@ class GameLogger:
         action = f"platziert {ship_name} bei ({x},{y})"
         result = "erfolgreich" if success else "fehlgeschlagen"
         GameLogger._add_entry(player_name, action, result)
+        
+        # Store successful human player placements in database for AI learning
+        if GameLogger._db_manager and success and not player_name.endswith("Computer"):
+            GameLogger._db_manager.placement_repo.store_placement(player_name, ship, x, y, ship.orientation.name)
     
     @staticmethod
     def log_shot(player_name: str, x: int, y: int, hit: bool, hit_object: Optional[GameObject] = None, 
                  is_destroyed: bool = False):
         """
-        Log shooting attempt and its result.
+        Log shooting attempt and its result, storing in database for learning.
         
         Args:
             player_name: Name of the player shooting
@@ -108,6 +126,10 @@ class GameLogger:
             result = "Treffer"
         
         GameLogger._add_entry(player_name, action, result)
+        
+        # Store human player shots in database for AI learning
+        if GameLogger._db_manager and not player_name.endswith("Computer"):
+            GameLogger._db_manager.shot_repo.store_shot(player_name, x, y, hit)
     
     @staticmethod
     def log_mine_explosion(player_name: str, destroyed_ship: Ship):

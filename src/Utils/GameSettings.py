@@ -8,7 +8,7 @@ separated from the UI components for better separation of concerns.
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from src.Utils.constants import PlayerType, GameMode, GameConstants
+from src.Utils.Constants import PlayerType, GameMode, GameConstants
 
 
 @dataclass

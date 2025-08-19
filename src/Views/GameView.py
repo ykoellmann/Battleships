@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Type
 
-from src.Utils.constants import (
+from src.Utils.Constants import (
     GameMode, UIConfig, UIColors,
     ButtonLabels
 )
@@ -82,6 +82,9 @@ class GameUI:
 
         # Initialize logging system (static class, no instantiation needed)
         self.log_window = LogWindow(self.window)
+        
+        # Initialize database for AI learning
+        GameLogger.initialize_database()
         
         # Initialize color legend window
         self.color_legend_window = ColorLegendWindow(self.window)

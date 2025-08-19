@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 from typing import List, Tuple
 
 from src.Core.Board.Board import Board
-from src.Utils.constants import BoardConfig
+from src.Utils.Constants import BoardConfig
 from src.Utils.Orientation import Orientation
 
 

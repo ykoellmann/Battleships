@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from src.Utils.constants import CellColors, UIColors
+from src.Utils.Constants import CellColors, UIColors
 
 
 class ColorLegendWindow:

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from src.Utils.constants import PlayerType, GameMode, GameConstants, UIColors
+from src.Utils.Constants import PlayerType, GameMode, GameConstants, UIColors
 from src.Utils.GameSettings import GameSettings
 
 

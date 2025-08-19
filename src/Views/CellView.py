@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from src.Core.Board.Cell import Cell, CellState
-from src.Utils.constants import CellColors, UIConfig
+from src.Utils.Constants import CellColors, UIConfig
 
 
 class CellView:
