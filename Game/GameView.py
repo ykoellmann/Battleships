@@ -1,13 +1,16 @@
 import copy
 import tkinter as tk
 import time
+from inspect import isclass
 from tkinter import ttk, messagebox
-from typing import List
+from typing import List, Type
 
 from Board.Board import Board
 from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.ExtendedPlacementPhase import ExtendedPlacementPhase
 from Game.GamePhase.ExtendedShootingPhase import ExtendedShootingPhase
+from Game.GamePhase.GamePhase import GamePhase
+from Game.GamePhase.PhaseConfig import PhaseConfig
 from Game.GamePhase.PlacementPhase import PlacementPhase
 from Game.GamePhase.ShootingPhase import ShootingPhase
 from Objects.GameObject import GameObject
@@ -45,6 +48,7 @@ class GameUI:
         self.window.title("Schiffe Versenken")
         self.game_phase = None
         self.boards_frame = None
+        self.base_config = None  # Base configuration to reuse for phase transitions
 
         self.settings_view = SettingsView(self.window, GameSettings(), self.start_game)
         self.settings_view.grid(row=0, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
@@ -91,7 +95,16 @@ class GameUI:
         player1 = PlayerFactory.create(settings.p1_type, settings.p1_name, settings.p1_difficulty, player1_board, player2_board)
         player2 = PlayerFactory.create(settings.p2_type, settings.p2_name, settings.p2_difficulty, player2_board, player1_board)
 
-        self.game_phase = game_phase_class(player1, player2, self.placement_callback, settings=settings)
+        # Store base config for reuse in phase transitions
+        self.base_config = PhaseConfig(
+            state=GameState.Placement,
+            player1=player1,
+            player2=player2,
+            turn_callback=self.placement_callback,
+            next_phase_callback=self.next_phase_callback,  # Will be set later if needed
+            settings=settings
+        )
+        self.game_phase = game_phase_class(self.base_config)
 
         # Setze Boards in BoardViews
         for idx, board_view in enumerate(self.board_views):
@@ -179,9 +192,37 @@ class GameUI:
         if is_over and not self.has_ended:
             self.has_ended = True
             self.winner = self.game_phase.current_player
-            self.game_phase = EndPhase(self.game_phase.players[0], self.game_phase.players[1],
-                                            self._handle_game_end)
+            config = self.base_config.with_changes(
+                state=GameState.End,
+                turn_callback=self._handle_game_end
+            )
+            self.game_phase = EndPhase(config)
             self.game_phase.next_turn()
+
+    def next_phase_callback(self, next_phase: Type[GamePhase]):
+        match True:
+            case _ if self.is_phase(next_phase, PlacementPhase):
+                turn_callback = self.placement_callback
+                state = GameState.Placement
+            case _ if self.is_phase(next_phase, ShootingPhase):
+                turn_callback = self.shooting_callback
+                state = GameState.Shooting
+            case _ if self.is_phase(next_phase, EndPhase):
+                turn_callback = self._handle_game_end
+                state = GameState.End
+            case _:
+                raise ValueError(f"Invalid phase transition: {next_phase}")
+        
+        config = self.base_config.with_changes(
+            state = state,
+            turn_callback=turn_callback
+        )
+        self.game_phase = next_phase(config)
+        self.game_phase.next_turn()
+        self.update_boards()
+    
+    def is_phase(self, next_phase: Type[GamePhase], check_type: Type[GamePhase]):
+        return next_phase is check_type or issubclass(next_phase, check_type)
 
     def placement_callback(self, is_placed, is_over):
         if not is_placed:
@@ -193,8 +234,11 @@ class GameUI:
                 game_phase_class = ExtendedShootingPhase
             else:
                 game_phase_class = ShootingPhase
-            self.game_phase = game_phase_class(self.game_phase.players[0], self.game_phase.players[1],
-                                            self.shooting_callback)
+            config = self.base_config.with_changes(
+                state=GameState.Shooting,
+                turn_callback=self.shooting_callback
+            )
+            self.game_phase = game_phase_class(config)
             self.game_phase.window = self.window
             self.current_ship_label.config(text="")
             if hasattr(self, "orientation_button"):
@@ -209,37 +253,6 @@ class GameUI:
         messagebox.showinfo("Spielende", f"{self.winner.name} hat gewonnen!")
         self.current_ship_label.config(text="Spiel beendet")
         return True
-
-    # def _execute_shot(self, x: int, y: int) -> bool:
-    #     """
-    #     Führt einen Schuss aus und behandelt die Konsequenzen.
-    #
-    #     Returns:
-    #         bool: True wenn das Spiel beendet wurde, False sonst.
-    #     """
-    #     current_idx = self.game.current_player_idx
-    #     target_board = self.game.players[1 - current_idx].board
-    #
-    #     hit, is_destroyed, game_object = target_board.shoot_at(x, y)
-    #     self.board_views[current_idx].cells_ui[x][y].set_enabled(False)
-    #
-    #     # Spezielle Behandlung für HardComputerPlayer
-    #     if isinstance(self.game.current_player, HardComputerPlayer):
-    #         self.game.current_player.process_shot_result(
-    #             x, y, hit, is_destroyed,
-    #             game_object.coordinates if game_object else []
-    #         )
-    #
-    #     self.update_boards()
-    #
-    #     if self._handle_game_end():
-    #         return True
-    #
-    #     # Spielerwechsel nur bei Fehlschuss
-    #     if not hit:
-    #         self._switch_player(hit)
-    #
-    #     return False
 
     def start_real_game(self):
         self.update_boards()
@@ -360,22 +373,6 @@ class GameUI:
             board_view.set_hover_enabled(False)
             board_view.update()
             board_view.set_enabled(False)
-
-    # def _update_ui_for_game_state(self):
-    #     """Aktualisiert die gesamte UI basierend auf dem aktuellen Spielzustand."""
-    #     if self.game.current_state == GameState.Placement:
-    #         self._toggle_orientation_button(True)
-    #         self.update_current_ship_label()
-    #     elif self.game.current_state == GameState.Shooting:
-    #         self._toggle_orientation_button(False)
-    #         self._update_current_player_label()
-    #
-    #     self.update_boards()
-
-    # def _update_current_player_label(self):
-    #     """Aktualisiert das Label für den aktuellen Spieler."""
-    #     if self.game.current_state == GameState.Shooting:
-    #         self.current_ship_label.config(text=f"{self.game.current_player.name} ist am Zug")
 
     def run(self):
         self.window.mainloop()

@@ -1,11 +1,20 @@
 from Game.GamePhase.GamePhase import GamePhase
+from Game.GamePhase.PhaseConfig import PhaseConfig
 from Utils.GameState import GameState
 
 
 class EndPhase(GamePhase):
 
-    def __init__(self, player1, player2, turn_callback):
-        super().__init__(GameState.End, player1, player2, turn_callback)
+    def __init__(self, config: PhaseConfig):
+        """
+        Initialize the EndPhase with configuration.
+        
+        This phase represents the end state of the game when one player has won.
+        
+        Args:
+            config: PhaseConfig object containing all initialization parameters
+        """
+        super().__init__(config)
 
     def execute_turn(self, x, y):
         pass
@@ -16,5 +25,8 @@ class EndPhase(GamePhase):
     def is_over(self):
         return True
 
-    def handle_cell_click(self, x, y):
+    def handle_cell_click(self, x, y, is_own_board):
+        pass
+
+    def next_phase(self):
         pass

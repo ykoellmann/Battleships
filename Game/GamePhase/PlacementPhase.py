@@ -1,5 +1,6 @@
 import copy
 from Game.GamePhase.GamePhase import GamePhase
+from Game.GamePhase.PhaseConfig import PhaseConfig
 from Objects.GameObject import GameObject
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Player.HumanPlayer import HumanPlayer
@@ -10,15 +11,25 @@ from Utils.Orientation import Orientation
 
 class PlacementPhase(GamePhase):
 
-    def __init__(self, player1: Player, player2: Player, turn_callback, settings=None):
+    def __init__(self, config: PhaseConfig):
+        """
+        Initialize the PlacementPhase with configuration.
+        
+        This phase handles the placement of ships and other game objects on the board.
+        
+        Args:
+            config: PhaseConfig object containing all initialization parameters
+        """
         self.placement_object_idx = 0
-        if settings is not None:
+        if config.settings is not None:
             base_objects = self.create_game_objects(Orientation.HORIZONTAL)
-            settings.game_objects = [copy.deepcopy(obj) for obj in base_objects]
-            super().__init__(GameState.Placement, player1, player2, turn_callback, settings)
+            config.settings.game_objects = [copy.deepcopy(obj) for obj in base_objects]
+        super().__init__(config)
 
-    def handle_cell_click(self, x, y):
+    def handle_cell_click(self, x, y, is_own_board):
         if not isinstance(self.current_player, HumanPlayer):
+            return
+        if not is_own_board:
             return
 
         is_placed = self.execute_turn(x, y)
@@ -46,8 +57,13 @@ class PlacementPhase(GamePhase):
 
         self.placement_object_idx = 0
         if self.next_player():
+            self.next_phase()
             return True
         return False  # oder True, wenn direkt Phasewechsel
+
+    def next_phase(self):
+        new_phase = PlacementPhase
+        self.next_phase_callback(new_phase)
 
     @property
     def current_object(self) -> GameObject:

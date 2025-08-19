@@ -1,4 +1,6 @@
+from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.GamePhase import GamePhase
+from Game.GamePhase.PhaseConfig import PhaseConfig
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Player.Computer.HardComputerPlayer import HardComputerPlayer
 from Player.Player import Player
@@ -6,10 +8,20 @@ from Utils.GameState import GameState
 
 class ShootingPhase(GamePhase):
 
-    def __init__(self, player1: Player, player2: Player, turn_callback, settings=None):
-        super().__init__(GameState.Shooting, player1, player2, turn_callback)
+    def __init__(self, config: PhaseConfig):
+        """
+        Initialize the ShootingPhase with configuration.
+        
+        This phase handles the shooting mechanics of the game.
+        
+        Args:
+            config: PhaseConfig object containing all initialization parameters
+        """
+        super().__init__(config)
 
-    def handle_cell_click(self, x, y):
+    def handle_cell_click(self, x, y, is_own_board):
+        if is_own_board:
+            return
         cell = self.other_player.board.get_cell(x, y)
         if cell.is_hit or cell.is_miss:
             return
@@ -42,6 +54,10 @@ class ShootingPhase(GamePhase):
 
     def is_over(self):
         return self.game_over
+
+    def next_phase(self):
+        new_phase = EndPhase
+        self.next_phase_callback(new_phase)
 
     def execute_computer_turn(self):
         target = self.current_player.select_target()

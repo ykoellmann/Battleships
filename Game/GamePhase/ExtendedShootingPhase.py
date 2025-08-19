@@ -1,6 +1,8 @@
 import random
 
+from Game.GamePhase.EndPhase import EndPhase
 from Game.GamePhase.ShootingPhase import ShootingPhase
+from Game.GamePhase.PhaseConfig import PhaseConfig
 from Objects.Ships.Ship import Ship
 from Player.Computer.ComputerPlayer import ComputerPlayer
 from Player.Computer.HardComputerPlayer import HardComputerPlayer
@@ -8,8 +10,16 @@ from Player.Player import Player
 
 
 class ExtendedShootingPhase(ShootingPhase):
-    def __init__(self, player1: Player, player2: Player, turn_callback, settings=None):
-        super().__init__(player1, player2, turn_callback)
+    def __init__(self, config: PhaseConfig):
+        """
+        Initialize the ExtendedShootingPhase with configuration.
+        
+        This phase extends the shooting phase with ship selection and limited shots per ship.
+        
+        Args:
+            config: PhaseConfig object containing all initialization parameters
+        """
+        super().__init__(config)
         self.shooting_ship = None
         self.shot = 0
 
@@ -36,13 +46,17 @@ class ExtendedShootingPhase(ShootingPhase):
         return result.hit, self.next_turn(result.hit)
 
     def next_turn(self, hit):
-        if (not self.shooting_ship) or self.shot >= self.shooting_ship.size:
+        if (self.shooting_ship is None and self.shot == 1) or self.shot >= self.shooting_ship.size:
             self.next_player()
 
         if isinstance(self.current_player, ComputerPlayer):
             self.execute_computer_turn()
 
         self.turn_callback(hit, self.is_over())
+
+    def next_phase(self):
+        new_phase = EndPhase
+        self.next_phase_callback(new_phase)
 
     def next_player(self):
         self.shooting_ship = None

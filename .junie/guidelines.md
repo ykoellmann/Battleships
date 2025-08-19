@@ -50,3 +50,5 @@ Logik in Game-/Phase-Klassen.
 Darstellung in View-/UI-Klassen.
 
 Kein Mischen von Verantwortlichkeiten.
+
+Importe von anderen Klassen nie innerhalb von Methoden oder klassen
