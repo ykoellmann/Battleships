@@ -61,6 +61,10 @@ class GameUI:
         self.current_ship_label = ttk.Label(self.window, text="")
         self.current_ship_label.grid(row=2, column=0, columnspan=2, pady=5)
 
+        # Create horizontal button frame below status text
+        self.button_frame = tk.Frame(self.window, bg=UIColors.WINDOW_BG)
+        self.button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+
         # Initialize buttons as None instead of using hasattr
         self.orientation_button = None
         self.confirmation_button = None
@@ -289,14 +293,14 @@ class GameUI:
         """Stellt sicher, dass der Orientierungsbutton existiert und aktiviert ihn."""
         if self.orientation_button is None:
             self.orientation_button = tk.Button(
-                self.window,
+                self.button_frame,
                 text=ButtonLabels.TOGGLE_ORIENTATION,
                 command=lambda: self.game_phase.toggle_orientation(),
                 bg=UIColors.BUTTON_BG,
                 fg=UIColors.BUTTON_FG,
                 activebackground=UIColors.BUTTON_ACTIVE_BG
             )
-            self.orientation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+            self.orientation_button.pack(side=tk.LEFT, padx=5)
 
         state = "normal" if enabled else "disabled"
         self.orientation_button.config(state=state)
@@ -305,14 +309,14 @@ class GameUI:
         """Stellt sicher, dass der Bestätigungsbutton für Schiffauswahl existiert und aktiviert ihn."""
         if self.confirmation_button is None:
             self.confirmation_button = tk.Button(
-                self.window,
+                self.button_frame,
                 text=ButtonLabels.CONFIRM_SELECTION,
                 command=lambda: self.game_phase.confirm_ship_selection(),
                 bg=UIColors.BUTTON_BG,
                 fg=UIColors.BUTTON_FG,
                 activebackground=UIColors.BUTTON_ACTIVE_BG
             )
-            self.confirmation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+            self.confirmation_button.pack(side=tk.LEFT, padx=5)
 
         state = "normal" if enabled else "disabled"
         self.confirmation_button.config(state=state)
@@ -321,14 +325,14 @@ class GameUI:
         """Stellt sicher, dass der Auto-Platzierungsbutton existiert und aktiviert ihn."""
         if self.auto_place_button is None:
             self.auto_place_button = tk.Button(
-                self.window,
+                self.button_frame,
                 text=ButtonLabels.AUTO_PLACE_ALL,
                 command=self._auto_place_all_ships,
                 bg=UIColors.BUTTON_BG,
                 fg=UIColors.BUTTON_FG,
                 activebackground=UIColors.BUTTON_ACTIVE_BG
             )
-            self.auto_place_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+            self.auto_place_button.pack(side=tk.LEFT, padx=5)
 
         state = "normal" if enabled else "disabled"
         self.auto_place_button.config(state=state)
@@ -337,27 +341,27 @@ class GameUI:
         """Creates the log window button if it doesn't exist."""
         if self.log_button is None:
             self.log_button = tk.Button(
-                self.window,
+                self.button_frame,
                 text="Spiel-Log öffnen",
                 command=self.log_window.open_window,
                 bg=UIColors.BUTTON_BG,
                 fg=UIColors.BUTTON_FG,
                 activebackground=UIColors.BUTTON_ACTIVE_BG
             )
-            self.log_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE + 1, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+            self.log_button.pack(side=tk.LEFT, padx=5)
     
     def _create_legend_button(self):
         """Creates the color legend button if it doesn't exist."""
         if self.legend_button is None:
             self.legend_button = tk.Button(
-                self.window,
+                self.button_frame,
                 text="Farblegende",
                 command=self.color_legend_window.open_window,
                 bg=UIColors.BUTTON_BG,
                 fg=UIColors.BUTTON_FG,
                 activebackground=UIColors.BUTTON_ACTIVE_BG
             )
-            self.legend_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE + 2, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+            self.legend_button.pack(side=tk.LEFT, padx=5)
 
     def _show_button(self, button_type: str):
         """Zeigt den entsprechenden Button an und versteckt den anderen."""

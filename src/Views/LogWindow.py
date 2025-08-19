@@ -141,12 +141,9 @@ class LogWindow:
         self.text_area.see(tk.END)
     
     def clear_log(self):
-        """Clear all log entries after user confirmation."""
-        import tkinter.messagebox as messagebox
-        
-        if messagebox.askyesno("Log löschen", "Möchten Sie wirklich alle Log-Einträge löschen?"):
-            GameLogger.clear_log()
-            self.refresh_log()
+        """Clear all log entries."""
+        GameLogger.clear_log()
+        self.refresh_log()
     
     def _center_window(self):
         """Center the log window relative to the parent window."""
