@@ -8,13 +8,13 @@ from src.Utils.constants import (
 )
 
 from src.Core.Board.Board import Board
-from src.Core.Game.Phases.EndPhase import EndPhase
-from src.Core.Game.Phases.ExtendedPlacementPhase import ExtendedPlacementPhase
-from src.Core.Game.Phases.ExtendedShootingPhase import ExtendedShootingPhase
-from src.Core.Game.Phases.GamePhase import GamePhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
-from src.Core.Game.Phases.PlacementPhase import PlacementPhase
-from src.Core.Game.Phases.ShootingPhase import ShootingPhase
+from src.Core.GamePhases.EndPhase import EndPhase
+from src.Core.GamePhases.ExtendedPlacementPhase import ExtendedPlacementPhase
+from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Core.GamePhases.GamePhase import GamePhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.PlacementPhase import PlacementPhase
+from src.Core.GamePhases.ShootingPhase import ShootingPhase
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
 from src.Players.PlayerFactory import PlayerFactory
 from src.Players.HumanPlayer import HumanPlayer

@@ -1,5 +1,5 @@
-from src.Core.Game.Phases.GamePhase import GamePhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.GamePhase import GamePhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 
 
 class EndPhase(GamePhase):

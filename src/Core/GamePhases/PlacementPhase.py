@@ -1,8 +1,8 @@
 import copy
 
 from src.Utils.GameLogger import GameLogger
-from src.Core.Game.Phases.GamePhase import GamePhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.GamePhase import GamePhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
 from src.Players.HumanPlayer import HumanPlayer
 from src.Utils.Orientation import Orientation
@@ -105,8 +105,8 @@ class PlacementPhase(GamePhase):
         Selects appropriate shooting phase based on game mode
         (standard or extended).
         """
-        from src.Core.Game.Phases.ShootingPhase import ShootingPhase
-        from src.Core.Game.Phases.ExtendedShootingPhase import ExtendedShootingPhase
+        from src.Core.GamePhases.ShootingPhase import ShootingPhase
+        from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
 
         if self.settings.mode == "Erweitert":
             new_phase = ExtendedShootingPhase

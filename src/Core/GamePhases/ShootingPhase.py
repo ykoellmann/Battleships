@@ -1,7 +1,7 @@
 from src.Utils.GameLogger import GameLogger
-from src.Core.Game.Phases.EndPhase import EndPhase
-from src.Core.Game.Phases.GamePhase import GamePhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.EndPhase import EndPhase
+from src.Core.GamePhases.GamePhase import GamePhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
 from src.Players.Computer.HardComputerPlayer import HardComputerPlayer
 

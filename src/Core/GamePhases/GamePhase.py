@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Callable, Optional
 
 from src.Utils.GameState import GameState
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 
 from src.Players.Player import Player
 from src.Views.SettingsView import GameSettings

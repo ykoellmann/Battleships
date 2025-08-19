@@ -1,9 +1,9 @@
 import random
 
 from src.Utils.GameLogger import GameLogger
-from src.Core.Game.Phases.EndPhase import EndPhase
-from src.Core.Game.Phases.ShootingPhase import ShootingPhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.EndPhase import EndPhase
+from src.Core.GamePhases.ShootingPhase import ShootingPhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
 from src.Core.Entities.Ships.Ship import Ship
 from src.Players.Computer.ComputerPlayer import ComputerPlayer

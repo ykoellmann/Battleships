@@ -1,5 +1,5 @@
-from src.Core.Game.Phases.PlacementPhase import PlacementPhase
-from src.Core.Game.Phases.PhaseConfig import PhaseConfig
+from src.Core.GamePhases.PlacementPhase import PlacementPhase
+from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
 from src.Utils.Orientation import Orientation
 
