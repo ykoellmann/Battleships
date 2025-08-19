@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from typing import Type
 
 from src.Utils.constants import (
-    GameMode, UIConfig,
+    GameMode, UIConfig, UIColors,
     ButtonLabels
 )
 
@@ -23,6 +23,7 @@ from src.Views.BoardView import BoardView
 from src.Views.SettingsView import SettingsView, GameSettings
 from src.Utils.GameLogger import GameLogger
 from src.Views.LogWindow import LogWindow
+from src.Views.ColorLegendWindow import ColorLegendWindow
 from src.Utils.GameState import GameState
 
 
@@ -44,6 +45,10 @@ class GameUI:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Schiffe Versenken")
+        self.window.configure(bg=UIColors.WINDOW_BG)
+        
+        # Configure TTK styles for brownish theme
+        self._configure_ttk_styles()
         self.game_phase = None
         self.boards_frame = None
         self.base_config = None  # Base configuration to reuse for phase transitions
@@ -74,17 +79,141 @@ class GameUI:
         # Initialize logging system (static class, no instantiation needed)
         self.log_window = LogWindow(self.window)
         
+        # Initialize color legend window
+        self.color_legend_window = ColorLegendWindow(self.window)
+        
         # Log window button
         self.log_button = None
+        
+        # Color legend button
+        self.legend_button = None
+
+    def _configure_ttk_styles(self):
+        """Configure TTK styles for brownish theme."""
+        style = ttk.Style()
+        
+        # Set theme to default to ensure proper styling base
+        style.theme_use('default')
+        
+        # Brown button style
+        style.configure('Brown.TButton',
+                        background=UIColors.BUTTON_BG,
+                        foreground=UIColors.BUTTON_FG,
+                        borderwidth=1,
+                        focuscolor='none')
+        style.map('Brown.TButton',
+                  background=[('active', UIColors.BUTTON_ACTIVE_BG),
+                             ('pressed', UIColors.BUTTON_ACTIVE_BG)])
+        
+        # Brown combobox style with aggressive configuration
+        style.configure('Brown.TCombobox',
+                        fieldbackground=UIColors.BUTTON_BG,
+                        background=UIColors.BUTTON_BG,
+                        foreground=UIColors.BUTTON_FG,
+                        borderwidth=1,
+                        arrowcolor=UIColors.BUTTON_FG,
+                        insertcolor=UIColors.BUTTON_FG,
+                        relief='flat',
+                        lightcolor=UIColors.BUTTON_BG,
+                        darkcolor=UIColors.BUTTON_BG)
+        style.map('Brown.TCombobox',
+                  fieldbackground=[('readonly', UIColors.BUTTON_BG),
+                                 ('focus', UIColors.BUTTON_BG),
+                                 ('!focus', UIColors.BUTTON_BG),
+                                 ('active', UIColors.BUTTON_BG),
+                                 ('!active', UIColors.BUTTON_BG)],
+                  background=[('readonly', UIColors.BUTTON_BG),
+                            ('focus', UIColors.BUTTON_BG),
+                            ('!focus', UIColors.BUTTON_BG),
+                            ('active', UIColors.BUTTON_BG),
+                            ('!active', UIColors.BUTTON_BG)],
+                  foreground=[('readonly', UIColors.BUTTON_FG),
+                            ('focus', UIColors.BUTTON_FG),
+                            ('!focus', UIColors.BUTTON_FG)],
+                  selectbackground=[('readonly', UIColors.BUTTON_ACTIVE_BG)],
+                  selectforeground=[('readonly', UIColors.BUTTON_FG)],
+                  arrowcolor=[('readonly', UIColors.BUTTON_FG),
+                            ('focus', UIColors.BUTTON_FG),
+                            ('!focus', UIColors.BUTTON_FG)])
+        
+        # Configure combobox sub-elements more aggressively
+        style.element_create('Brown.TCombobox.field', 'from', 'default')
+        style.element_create('Brown.TCombobox.downarrow', 'from', 'default')
+        
+        # Layout configuration
+        style.layout('Brown.TCombobox', [
+            ('Brown.TCombobox.field', {'sticky': 'nswe', 'children': [
+                ('Brown.TCombobox.padding', {'expand': '1', 'sticky': 'nswe', 'children': [
+                    ('Brown.TCombobox.textarea', {'sticky': 'nswe'})
+                ]})
+            ]}),
+            ('Brown.TCombobox.downarrow', {'side': 'right', 'sticky': 'ns'})
+        ])
+        
+        # Configure individual elements
+        style.configure('Brown.TCombobox.field',
+                        background=UIColors.BUTTON_BG,
+                        fieldbackground=UIColors.BUTTON_BG,
+                        bordercolor=UIColors.BUTTON_ACTIVE_BG,
+                        lightcolor=UIColors.BUTTON_BG,
+                        darkcolor=UIColors.BUTTON_BG)
+        
+        style.configure('Brown.TCombobox.downarrow',
+                        background=UIColors.BUTTON_BG,
+                        arrowcolor=UIColors.BUTTON_FG)
+        
+        # Configure combobox Entry sub-element specifically
+        style.configure('Brown.TCombobox.Entry',
+                        background=UIColors.BUTTON_BG,
+                        fieldbackground=UIColors.BUTTON_BG,
+                        foreground=UIColors.BUTTON_FG,
+                        insertcolor=UIColors.BUTTON_FG)
+        style.map('Brown.TCombobox.Entry',
+                  background=[('readonly', UIColors.BUTTON_BG),
+                            ('focus', UIColors.BUTTON_BG),
+                            ('!focus', UIColors.BUTTON_BG)],
+                  fieldbackground=[('readonly', UIColors.BUTTON_BG),
+                                 ('focus', UIColors.BUTTON_BG),
+                                 ('!focus', UIColors.BUTTON_BG)],
+                  foreground=[('readonly', UIColors.BUTTON_FG),
+                            ('focus', UIColors.BUTTON_FG),
+                            ('!focus', UIColors.BUTTON_FG)])
+        
+        # Configure combobox listbox (dropdown list)
+        style.configure('Brown.TCombobox.Listbox',
+                        background=UIColors.BUTTON_BG,
+                        foreground=UIColors.BUTTON_FG,
+                        selectbackground=UIColors.BUTTON_ACTIVE_BG,
+                        selectforeground=UIColors.BUTTON_FG,
+                        borderwidth=1)
+        
+        # Configure the dropdown window with more options
+        self.window.option_add('*TCombobox*Listbox.Background', UIColors.BUTTON_BG)
+        self.window.option_add('*TCombobox*Listbox.Foreground', UIColors.BUTTON_FG)
+        self.window.option_add('*TCombobox*Listbox.selectBackground', UIColors.BUTTON_ACTIVE_BG)
+        self.window.option_add('*TCombobox*Listbox.selectForeground', UIColors.BUTTON_FG)
+        
+        # Additional global combobox options
+        self.window.option_add('*TCombobox*Entry.Background', UIColors.BUTTON_BG)
+        self.window.option_add('*TCombobox*Entry.Foreground', UIColors.BUTTON_FG)
+        self.window.option_add('*TCombobox.Background', UIColors.BUTTON_BG)
+        self.window.option_add('*TCombobox.Foreground', UIColors.BUTTON_FG)
+        
+        # Brown frame style for boards container
+        style.configure('Brown.TFrame',
+                        background=UIColors.FRAME_BG)
+        
 
     def create_game_boards(self):
-        boards_frame = ttk.Frame(self.window, padding=10)
+        boards_frame = ttk.Frame(self.window, padding=10, style='Brown.TFrame')
         boards_frame.grid(row=1, column=0, columnspan=2)
 
         self.boards_frame = boards_frame
         self.board_views.clear()
         for idx in range(2):
-            frame = ttk.LabelFrame(boards_frame, text=f"Spieler {idx+1}", padding=5)
+            frame = tk.LabelFrame(boards_frame, text=f"Spieler {idx+1}", 
+                                 bg=UIColors.BOARD_FRAME_BG, fg=UIColors.BUTTON_FG,
+                                 bd=2, relief="solid", padx=5, pady=5)
             frame.grid(row=0, column=idx, padx=10)
             board_view = BoardView(
                 frame,
@@ -136,6 +265,9 @@ class GameUI:
         # Create log button
         self._create_log_button()
         
+        # Create color legend button
+        self._create_legend_button()
+        
         # Log game start
         GameLogger.log_game_start(player1.name, player2.name)
 
@@ -156,57 +288,76 @@ class GameUI:
     def _toggle_orientation_button(self, enabled: bool):
         """Stellt sicher, dass der Orientierungsbutton existiert und aktiviert ihn."""
         if self.orientation_button is None:
-            self.orientation_button = ttk.Button(
+            self.orientation_button = tk.Button(
                 self.window,
                 text=ButtonLabels.TOGGLE_ORIENTATION,
-                command=lambda: self.game_phase.toggle_orientation() if isinstance(self.game_phase, PlacementPhase) else None,
+                command=lambda: self.game_phase.toggle_orientation(),
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
             )
             self.orientation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
-        state = "disabled"
-        if enabled:
-            state = "!" + state
-        self.orientation_button.state([state])
+        state = "normal" if enabled else "disabled"
+        self.orientation_button.config(state=state)
 
     def _toggle_confirmation_button(self, enabled: bool):
         """Stellt sicher, dass der Bestätigungsbutton für Schiffauswahl existiert und aktiviert ihn."""
         if self.confirmation_button is None:
-            self.confirmation_button = ttk.Button(
+            self.confirmation_button = tk.Button(
                 self.window,
                 text=ButtonLabels.CONFIRM_SELECTION,
-                command=lambda: self.game_phase.confirm_ship_selection() if isinstance(self.game_phase, ExtendedShootingPhase) else None,
+                command=lambda: self.game_phase.confirm_ship_selection(),
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
             )
             self.confirmation_button.grid(row=UIConfig.BUTTON_ROW_ORIENTATION, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
-        state = "disabled"
-        if enabled:
-            state = "!" + state
-        self.confirmation_button.state([state])
+        state = "normal" if enabled else "disabled"
+        self.confirmation_button.config(state=state)
 
     def _toggle_auto_place_button(self, enabled: bool):
         """Stellt sicher, dass der Auto-Platzierungsbutton existiert und aktiviert ihn."""
         if self.auto_place_button is None:
-            self.auto_place_button = ttk.Button(
+            self.auto_place_button = tk.Button(
                 self.window,
                 text=ButtonLabels.AUTO_PLACE_ALL,
                 command=self._auto_place_all_ships,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
             )
             self.auto_place_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
-        state = "disabled"
-        if enabled:
-            state = "!" + state
-        self.auto_place_button.state([state])
+        state = "normal" if enabled else "disabled"
+        self.auto_place_button.config(state=state)
     
     def _create_log_button(self):
         """Creates the log window button if it doesn't exist."""
         if self.log_button is None:
-            self.log_button = ttk.Button(
+            self.log_button = tk.Button(
                 self.window,
                 text="Spiel-Log öffnen",
                 command=self.log_window.open_window,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
             )
             self.log_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE + 1, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
+    
+    def _create_legend_button(self):
+        """Creates the color legend button if it doesn't exist."""
+        if self.legend_button is None:
+            self.legend_button = tk.Button(
+                self.window,
+                text="Farblegende",
+                command=self.color_legend_window.open_window,
+                bg=UIColors.BUTTON_BG,
+                fg=UIColors.BUTTON_FG,
+                activebackground=UIColors.BUTTON_ACTIVE_BG
+            )
+            self.legend_button.grid(row=UIConfig.BUTTON_ROW_AUTO_PLACE + 2, column=0, columnspan=2, pady=UIConfig.DEFAULT_PADY)
 
     def _show_button(self, button_type: str):
         """Zeigt den entsprechenden Button an und versteckt den anderen."""

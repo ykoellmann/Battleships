@@ -1,6 +1,6 @@
 from src.Core.Board.Board import Board
 from src.Views.CellView import CellView
-from src.Utils.constants import UIConfig
+from src.Utils.constants import UIConfig, UIColors
 import tkinter as tk
 
 class BoardView:
@@ -34,8 +34,8 @@ class BoardView:
         self.hover_callback = hover_callback
         self._hover_enabled = False  # Hover im Pre-Game deaktiviert
 
-        # Rahmen um das gesamte Feld, leicht grau
-        self.frame = tk.Frame(parent, highlightbackground="#cccccc", highlightthickness=2, bd=0)
+        # Rahmen um das gesamte Feld, braun
+        self.frame = tk.Frame(parent, highlightbackground=UIColors.BOARD_BORDER, highlightthickness=2, bd=0)
         self.cells_ui = []
         self._build_cells()
 

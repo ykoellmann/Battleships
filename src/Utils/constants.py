@@ -57,15 +57,29 @@ class CellColors:
     INVALID_HIGHLIGHT = "#ff5555"  # Red for invalid placement
     SHIP_SELECTED = "#00ff00"      # Green for selected ship
     SHIP_HOVER = "#0080ff"         # Blue for ship hover
-    VALID_HIGHLIGHT = "#b3e6ff"    # Light blue for valid placement
+    VALID_HIGHLIGHT = "#b3d9ff"    # Darker blue for valid placement
     
     # Cell state colors
     HIT_SHIP = "red"               # Hit ship cell
-    HIT_MINE = "black"             # Hit mine cell
+    HIT_MINE = "#8b4cb8"           # Hit mine cell (purple)
     MISS = "black"                 # Miss cell
-    SHIP = "gray"                  # Ship cell
+    SHIP = "#8b4513"               # Ship cell (brown)
     MINE = "orange"                # Mine cell
-    EMPTY = "white"                # Empty cell
+    EMPTY = "#e6f3ff"              # Empty cell (more bluish)
+
+
+class UIColors:
+    """Color constants for UI elements like buttons and backgrounds."""
+    # Button colors (brownish theme)
+    BUTTON_BG = "#deb887"          # Light brown for buttons
+    BUTTON_ACTIVE_BG = "#cd853f"   # Darker brown for active buttons
+    BUTTON_FG = "#2f1b14"          # Dark brown text
+    
+    # Background colors (different brown tones)
+    WINDOW_BG = "#f5deb3"          # Wheat color for main background
+    FRAME_BG = "#e6d3a3"           # Slightly darker for frames
+    BOARD_FRAME_BG = "#d2b48c"     # Tan color for board frames
+    BOARD_BORDER = "#8b7355"       # Dark brown for board borders
 
 
 class GameConstants:
