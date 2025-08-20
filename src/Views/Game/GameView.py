@@ -238,7 +238,7 @@ class GameView:
                 )
                 self.game_phase = next_phase(config)
                 self.game_phase.window = self.window
-                self.start_real_game()
+                self.start_shooting()
                 return
             case _ if self.is_phase(next_phase, EndPhase):
                 # Handle game end - set winner before creating EndPhase
@@ -287,7 +287,7 @@ class GameView:
         self.phase_ui_manager.set_current_label_text(ButtonLabels.GAME_ENDED)
         return True
 
-    def start_real_game(self):
+    def start_shooting(self):
         messagebox.showinfo(MessageConstants.GAME_START, MessageConstants.GAME_START_MESSAGE)
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
