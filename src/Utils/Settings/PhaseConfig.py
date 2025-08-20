@@ -1,9 +1,9 @@
 from dataclasses import dataclass, replace
 from typing import Callable
 
-from src.Views.SettingsView import GameSettings
+from src.Views.Game.Components.SettingsView import GameSettings
 from src.Players.Player import Player
-from src.Utils.GameState import GameState
+from src.Utils.Enums.GameState import GameState
 
 
 @dataclass

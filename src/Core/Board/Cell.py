@@ -2,7 +2,7 @@ from enum import Enum
 from src.Core.Entities.GameObject import GameObject
 from src.Core.Entities.Mine import Mine
 from src.Core.Entities.Ships.Ship import Ship
-from src.Utils.ShootResult import ShootResult
+from src.Utils.Objects.ShootResult import ShootResult
 
 
 class CellState(Enum):
@@ -43,7 +43,7 @@ class Cell:
         self.y = y
         self.object: GameObject | None = None
         self.is_shot: bool = False
-        self.is_adjacent: bool = False         # Wird als angrenzend angezeigt (z. B. Hover-Vorschau)
+        self.is_adjacent: bool = False
 
     def place_object(self, obj: GameObject):
         """

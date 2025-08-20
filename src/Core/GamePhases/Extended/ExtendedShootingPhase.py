@@ -1,10 +1,10 @@
 import random
 
-from src.Utils.Constants import UIConfig
+from src.Utils.Enums.Constants import UIConfig
 from src.Utils.GameLogger import GameLogger
 from src.Core.GamePhases.EndPhase import EndPhase
 from src.Core.GamePhases.ShootingPhase import ShootingPhase
-from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Utils.Settings.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
 from src.Core.Entities.Ships.Ship import Ship
 from src.Players.Computer.ComputerPlayer import ComputerPlayer

@@ -1,9 +1,9 @@
 import tkinter as tk
 from typing import Dict, Optional, Callable
-from src.Utils.Constants import UIColors, ButtonLabels, ButtonType
+from src.Utils.Enums.Constants import UIColors, ButtonLabels, ButtonType
 
 
-class ButtonManager:
+class ButtonViewManager:
     """
     Manages dynamic button creation, destruction, and state for the game UI.
     

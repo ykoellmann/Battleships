@@ -1,5 +1,5 @@
 from src.Core.Entities.Ships.Ship import Ship
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class Submarine(Ship):
@@ -17,6 +17,4 @@ class Submarine(Ship):
             orientation: Initial orientation (horizontal or vertical)
             coordinates: Optional starting coordinates
         """
-        image_horizontal = "path/to/submarine_h.png"
-        image_vertical = "path/to/submarine_v.png"
-        super().__init__("Submarine", 2, orientation, image_horizontal, image_vertical, coordinates)
+        super().__init__("Submarine", 2, orientation, coordinates)

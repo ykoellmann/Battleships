@@ -1,10 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import scrolledtext
 from src.Utils.GameLogger import GameLogger
-from src.Utils.Constants import UIColors
+from src.Utils.Enums.Constants import UIColors
 
 
-class LogWindow:
+class LogView:
     """
     Separate window for displaying game log entries.
     

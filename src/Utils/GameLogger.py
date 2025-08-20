@@ -1,12 +1,11 @@
 import datetime
 from typing import List, Optional
-from dataclasses import dataclass
 from src.Core.Entities.GameObject import GameObject
 from src.Core.Entities.Ships.Ship import Ship
 from src.Core.Entities.Mine import Mine
 from src.Utils.Database.DatabaseManager import DatabaseManager
-from src.Utils.Constants import ButtonLabels
-from src.Utils.LogEntry import LogEntry
+from src.Utils.Enums.Constants import ButtonLabels
+from src.Utils.Objects.LogEntry import LogEntry
 
 
 class GameLogger:

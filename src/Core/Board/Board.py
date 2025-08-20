@@ -1,6 +1,6 @@
 from src.Core.Board.Cell import Cell
 from src.Core.Entities.GameObject import GameObject
-from src.Utils.ShootResult import ShootResult
+from src.Utils.Objects.ShootResult import ShootResult
 
 
 class Board:

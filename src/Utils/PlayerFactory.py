@@ -1,5 +1,4 @@
-from src.Utils.Constants import PlayerType, Difficulty
-from src.Utils.PlayerConfig import PlayerConfig
+from src.Utils.Enums.Constants import PlayerType, Difficulty
 from src.Players.Computer.EasyComputerPlayer import EasyComputerPlayer
 from src.Players.Computer.MediumComputerPlayer import MediumComputerPlayer
 from src.Players.Computer.ImpossibleComputerPlayer import ImpossibleComputerPlayer

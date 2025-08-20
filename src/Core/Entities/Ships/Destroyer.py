@@ -1,5 +1,5 @@
 from src.Core.Entities.Ships.Ship import Ship
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class Destroyer(Ship):
@@ -17,6 +17,4 @@ class Destroyer(Ship):
             orientation: Initial orientation (horizontal or vertical)
             coordinates: Optional starting coordinates
         """
-        image_horizontal = "path/to/destroyer_h.png"
-        image_vertical = "path/to/destroyer_v.png"
-        super().__init__("Destroyer", 3, orientation, image_horizontal, image_vertical, coordinates)
+        super().__init__("Destroyer", 3, orientation, coordinates)

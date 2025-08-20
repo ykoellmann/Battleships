@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from typing import List, Callable, Optional
 import tkinter as tk
 
-from src.Utils.GameState import GameState
-from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Utils.Enums.GameState import GameState
+from src.Utils.Settings.PhaseConfig import PhaseConfig
 
 from src.Players.Player import Player
-from src.Views.SettingsView import GameSettings
+from src.Views.Game.Components.SettingsView import GameSettings
 
 
 class GamePhase(ABC):

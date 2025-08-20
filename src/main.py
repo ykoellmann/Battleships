@@ -1,8 +1,8 @@
-from src.Views.GameView import GameUI
+from src.Views.Game.GameView import GameView
 
 
 def main():
-    game = GameUI()
+    game = GameView()
     game.run()
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import random
 from typing import List, Optional, Tuple
 
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 from src.Core.Board.Board import Board
 

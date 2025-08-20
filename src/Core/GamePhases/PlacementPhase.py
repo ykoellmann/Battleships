@@ -2,10 +2,10 @@ import copy
 
 from src.Utils.GameLogger import GameLogger
 from src.Core.GamePhases.GamePhase import GamePhase
-from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Utils.Settings.PhaseConfig import PhaseConfig
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
 from src.Players.HumanPlayer import HumanPlayer
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 from src.Core.Entities.GameObject import GameObject
 
 
@@ -106,7 +106,7 @@ class PlacementPhase(GamePhase):
         (standard or extended).
         """
         from src.Core.GamePhases.ShootingPhase import ShootingPhase
-        from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+        from src.Core.GamePhases.Extended.ExtendedShootingPhase import ExtendedShootingPhase
 
         if self.settings.mode == "Erweitert":
             new_phase = ExtendedShootingPhase

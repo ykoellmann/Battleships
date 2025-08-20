@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
-from src.Utils.Constants import UIColors
+from src.Utils.Enums.Constants import UIColors
 
 
-class StyleManager:
+class StyleViewManager:
     """
     Manages TTK style configuration for the game UI.
     

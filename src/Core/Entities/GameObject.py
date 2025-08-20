@@ -1,7 +1,7 @@
 import abc
 from abc import ABC
 
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class GameObject(ABC):
@@ -77,17 +77,6 @@ class GameObject(ABC):
         Rotate the object's orientation (horizontal ↔ vertical).
         """
         self.orientation = self.orientation.rotate()
-
-    @property
-    @abc.abstractmethod
-    def image(self):
-        """
-        Get the visual representation/image of this game object.
-
-        Returns:
-            Implementation-dependent image representation
-        """
-        pass
 
     def __str__(self):
         return f"{self.name} ({self.size}) [{str(self.orientation)}]"

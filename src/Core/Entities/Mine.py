@@ -1,5 +1,5 @@
 from src.Core.Entities.GameObject import GameObject
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class Mine(GameObject):
@@ -42,13 +42,3 @@ class Mine(GameObject):
             bool: True if the mine has been triggered, False otherwise
         """
         return self.triggered
-
-    @property
-    def image(self):
-        """
-        Get the visual representation of the mine.
-
-        Returns:
-            str: Unicode bomb symbol representing the mine
-        """
-        return "💣"

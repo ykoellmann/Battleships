@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
-from src.Utils.Constants import CellColors, UIColors
+from src.Utils.Enums.Constants import CellColors, UIColors
 
 
-class ColorLegendWindow:
+class ColorLegendView:
     """
     Popup window that explains the meaning of different cell colors in the game grid.
     

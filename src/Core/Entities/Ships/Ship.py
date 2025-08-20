@@ -1,5 +1,5 @@
 from src.Core.Entities.GameObject import GameObject
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class Ship(GameObject):
@@ -11,25 +11,10 @@ class Ship(GameObject):
         image_vertical: Resource path/object for vertical display
         hits: Number of registered hits on this ship
     """
-    def __init__(self, name: str, size: int, orientation: Orientation, image_horizontal, image_vertical,
+    def __init__(self, name: str, size: int, orientation: Orientation,
                  coordinates: list[tuple[int, int]] = None):
         super().__init__(name, size, orientation, coordinates)
-        self.image_horizontal = image_horizontal
-        self.image_vertical = image_vertical
         self.hits = 0
-
-    @property
-    def image(self):
-        """
-        Get the appropriate image based on current orientation.
-        
-        Returns:
-            Image resource for horizontal or vertical orientation
-        """
-        return (
-            self.image_horizontal if self.orientation == Orientation.HORIZONTAL
-            else self.image_vertical
-        )
 
     def on_hit(self, x, y):
         """

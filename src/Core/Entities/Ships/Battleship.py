@@ -1,5 +1,5 @@
 from src.Core.Entities.Ships.Ship import Ship
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class Battleship(Ship):
@@ -17,6 +17,4 @@ class Battleship(Ship):
             orientation: Initial orientation (horizontal or vertical)
             coordinates: Optional starting coordinates
         """
-        image_horizontal = "path/to/battleship_h.png"  # Path or loaded image
-        image_vertical = "path/to/battleship_v.png"
-        super().__init__("Battleship", 5, orientation, image_horizontal, image_vertical, coordinates)
+        super().__init__("Battleship", 5, orientation, coordinates)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from src.Utils.Constants import PlayerType, GameMode, GameConstants
+from src.Utils.Enums.Constants import PlayerType, GameMode, GameConstants
 
 
 @dataclass

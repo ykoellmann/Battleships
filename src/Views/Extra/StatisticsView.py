@@ -1,15 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
-from typing import List, Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional
 import sqlite3
 
-from src.Utils.Constants import UIColors
+from src.Utils.Enums.Constants import UIColors
 from src.Utils.Database.DatabaseManager import DatabaseManager
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
 from src.Utils.Database.Shot.UserShotRepository import UserShotRepository
 
 
-class StatisticsWindow:
+class StatisticsView:
     """
     Statistics window for displaying player behavior analytics.
     

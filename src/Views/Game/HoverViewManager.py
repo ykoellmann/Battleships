@@ -1,12 +1,12 @@
 from typing import Set, Tuple, List
 
 from src.Players.HumanPlayer import HumanPlayer
-from src.Utils.GameState import GameState
-from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
-from src.Views.BoardView import BoardView
+from src.Utils.Enums.GameState import GameState
+from src.Core.GamePhases.Extended.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Views.Game.Components.BoardView import BoardView
 
 
-class HoverManager:
+class HoverViewManager:
     """
     Manages hover effects and highlighting for the game UI.
     
@@ -113,7 +113,7 @@ class HoverManager:
             self.board_views[player_idx].update(
                 highlight_cells=self.hover_cells,
                 highlight_invalid_cells=self.hover_invalid_cells,
-                hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, current_player_idx)
+                hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, current_player_idx)
             )
     
     def _is_placement_valid(self, obj, board) -> bool:
@@ -171,7 +171,7 @@ class HoverManager:
                 self.board_views[player_idx].update(
                     ship_hover_cells=self.ship_hover_cells,
                     ship_selected_cells=self.ship_selected_cells,
-                    hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, player_idx)
+                    hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, player_idx)
                 )
             return
         
@@ -188,7 +188,7 @@ class HoverManager:
             self.board_views[player_idx].update(
                 ship_hover_cells=self.ship_hover_cells,
                 ship_selected_cells=self.ship_selected_cells,
-                hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, player_idx)
+                hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, player_idx)
             )
     
     def update_ship_selection_highlighting(self, game_phase) -> None:
@@ -216,7 +216,7 @@ class HoverManager:
                 self.board_views[current_player_idx].update(
                     ship_hover_cells=self.ship_hover_cells,
                     ship_selected_cells=self.ship_selected_cells,
-                    hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, current_player_idx)
+                    hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, current_player_idx)
                 )
 
     @staticmethod

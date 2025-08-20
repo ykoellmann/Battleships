@@ -1,15 +1,15 @@
 from tkinter import ttk
 from typing import List
-from src.Utils.GameState import GameState
-from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Utils.Enums.GameState import GameState
+from src.Core.GamePhases.Extended.ExtendedShootingPhase import ExtendedShootingPhase
 from src.Players.HumanPlayer import HumanPlayer
-from src.Views.BoardView import BoardView
-from src.Views.ButtonManager import ButtonManager
-from src.Views.HoverManager import HoverManager
-from src.Utils.Constants import ButtonLabels, MessageConstants, ButtonType, UIColors
+from src.Views.Game.Components.BoardView import BoardView
+from src.Views.Game.ButtonViewManager import ButtonViewManager
+from src.Views.Game.HoverViewManager import HoverViewManager
+from src.Utils.Enums.Constants import ButtonLabels, MessageConstants, ButtonType, UIColors
 
 
-class PhaseUIManager:
+class PhaseViewManager:
     """
     Manages phase-specific UI updates for the game interface.
     
@@ -24,8 +24,8 @@ class PhaseUIManager:
         hover_manager: HoverManager instance for hover effects
     """
     
-    def __init__(self, current_ship_label: ttk.Label, board_views: List[BoardView], 
-                 button_manager: ButtonManager, hover_manager: HoverManager):
+    def __init__(self, current_ship_label: ttk.Label, board_views: List[BoardView],
+                 button_manager: ButtonViewManager, hover_manager: HoverViewManager):
         """
         Initialize the PhaseUIManager with UI components and managers.
         

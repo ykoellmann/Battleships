@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-from src.Utils.Constants import PlayerType, GameMode, GameConstants, UIColors
-from src.Utils.GameSettings import GameSettings
+from src.Utils.Enums.Constants import PlayerType, GameMode, GameConstants, UIColors
+from src.Utils.Settings.GameSettings import GameSettings
 
 
 class SettingsView(tk.Frame):

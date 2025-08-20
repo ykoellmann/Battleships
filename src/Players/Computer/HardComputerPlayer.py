@@ -11,7 +11,7 @@ from src.Players.Computer.MediumComputerPlayer import MediumComputerPlayer
 from src.Utils.Database.DatabaseManager import DatabaseManager
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
 from src.Utils.Database.Shot.UserShotRepository import UserShotRepository
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 from src.Core.Board.Board import Board
 
 

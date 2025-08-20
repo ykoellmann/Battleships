@@ -1,7 +1,7 @@
 from src.Core.GamePhases.PlacementPhase import PlacementPhase
-from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Utils.Settings.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
-from src.Utils.Orientation import Orientation
+from src.Utils.Enums.Orientation import Orientation
 
 
 class ExtendedPlacementPhase(PlacementPhase):

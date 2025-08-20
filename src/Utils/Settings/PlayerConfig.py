@@ -32,7 +32,7 @@ class PlayerConfig:
         Returns:
             bool: True if player type is human, False otherwise
         """
-        from src.Utils.Constants import PlayerType
+        from src.Utils.Enums.Constants import PlayerType
         return self.player_type == PlayerType.HUMAN.value
     
     def is_computer(self) -> bool:
@@ -42,7 +42,7 @@ class PlayerConfig:
         Returns:
             bool: True if player type is computer, False otherwise
         """
-        from src.Utils.Constants import PlayerType
+        from src.Utils.Enums.Constants import PlayerType
         return self.player_type == PlayerType.COMPUTER.value
     
     def get_difficulty_level(self) -> str:

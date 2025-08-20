@@ -2,40 +2,37 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Type
 
-from src.Utils.Constants import (
-    GameMode, UIConfig, UIColors,
+from src.Utils.Enums.Constants import (
+    GameMode, UIColors,
     ButtonLabels, MessageConstants
 )
 
 from src.Core.Board.Board import Board
 from src.Core.GamePhases.EndPhase import EndPhase
-from src.Core.GamePhases.ExtendedPlacementPhase import ExtendedPlacementPhase
-from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Core.GamePhases.Extended.ExtendedPlacementPhase import ExtendedPlacementPhase
 from src.Core.GamePhases.GamePhase import GamePhase
-from src.Core.GamePhases.PhaseConfig import PhaseConfig
+from src.Utils.Settings.PhaseConfig import PhaseConfig
 from src.Core.GamePhases.PlacementPhase import PlacementPhase
 from src.Core.GamePhases.ShootingPhase import ShootingPhase
-from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Players.PlayerFactory import PlayerFactory
-from src.Players.HumanPlayer import HumanPlayer
+from src.Utils.PlayerFactory import PlayerFactory
 
-from src.Views.BoardView import BoardView
-from src.Views.SettingsView import SettingsView, GameSettings
+from src.Views.Game.Components.BoardView import BoardView
+from src.Views.Game.Components.SettingsView import SettingsView, GameSettings
 from src.Utils.GameLogger import GameLogger
-from src.Views.LogWindow import LogWindow
-from src.Views.ColorLegendWindow import ColorLegendWindow
-from src.Views.StatisticsWindow import StatisticsWindow
-from src.Utils.GameState import GameState
+from src.Views.Extra.LogView import LogView
+from src.Views.Extra.ColorLegendView import ColorLegendView
+from src.Views.Extra.StatisticsView import StatisticsView
+from src.Utils.Enums.GameState import GameState
 
 # Import the new manager classes
-from src.Views.ButtonManager import ButtonManager
-from src.Views.StyleManager import StyleManager
-from src.Views.HoverManager import HoverManager
-from src.Views.PhaseUIManager import PhaseUIManager
-from src.Views.BoardUIManager import BoardUIManager
+from src.Views.Game.ButtonViewManager import ButtonViewManager
+from src.Views.Game.StyleViewManager import StyleViewManager
+from src.Views.Game.HoverViewManager import HoverViewManager
+from src.Views.Game.PhaseViewManager import PhaseViewManager
+from src.Views.Game.BoardViewManager import BoardViewManager
 
 
-class GameUI:
+class GameView:
     """
     Refactored UI layer for the game using specialized manager classes.
     
@@ -76,7 +73,7 @@ class GameUI:
         self.window.configure(bg=UIColors.WINDOW_BG)
         
         # Initialize style manager first (needed for other components)
-        self.style_manager = StyleManager(self.window)
+        self.style_manager = StyleViewManager(self.window)
         
         # Initialize game state
         self.game_phase = None
@@ -98,22 +95,22 @@ class GameUI:
         self.button_frame.grid(row=3, column=0, columnspan=2, pady=10)
 
         # Initialize button manager
-        self.button_manager = ButtonManager(self.button_frame)
+        self.button_manager = ButtonViewManager(self.button_frame)
 
         # Create game boards
         self.board_views = []
         self.create_game_boards()
 
         # Initialize managers that depend on board_views
-        self.hover_manager = HoverManager(self.board_views)
-        self.phase_ui_manager = PhaseUIManager(self.current_ship_label, self.board_views, 
-                                              self.button_manager, self.hover_manager)
-        self.board_ui_manager = BoardUIManager(self.board_views, self.hover_manager)
+        self.hover_manager = HoverViewManager(self.board_views)
+        self.phase_ui_manager = PhaseViewManager(self.current_ship_label, self.board_views,
+                                                 self.button_manager, self.hover_manager)
+        self.board_ui_manager = BoardViewManager(self.board_views, self.hover_manager)
 
         # Initialize auxiliary windows
-        self.log_window = LogWindow(self.window)
-        self.color_legend_window = ColorLegendWindow(self.window)
-        self.statistics_window = StatisticsWindow(self.window)
+        self.log_window = LogView(self.window)
+        self.color_legend_window = ColorLegendView(self.window)
+        self.statistics_window = StatisticsView(self.window)
         
         # Initialize database for AI learning
         GameLogger.initialize_database()

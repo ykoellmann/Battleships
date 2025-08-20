@@ -1,13 +1,13 @@
 from typing import List
-from src.Utils.GameState import GameState
-from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Utils.Enums.GameState import GameState
+from src.Core.GamePhases.Extended.ExtendedShootingPhase import ExtendedShootingPhase
 from src.Players.HumanPlayer import HumanPlayer
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Views.BoardView import BoardView
-from src.Views.HoverManager import HoverManager
+from src.Views.Game.Components.BoardView import BoardView
+from src.Views.Game.HoverViewManager import HoverViewManager
 
 
-class BoardUIManager:
+class BoardViewManager:
     """
     Manages board updates and state coordination for the game UI.
     
@@ -20,7 +20,7 @@ class BoardUIManager:
         hover_manager: HoverManager instance for hover state coordination
     """
     
-    def __init__(self, board_views: List[BoardView], hover_manager: HoverManager):
+    def __init__(self, board_views: List[BoardView], hover_manager: HoverViewManager):
         """
         Initialize the BoardUIManager with board views and hover manager.
         
@@ -76,7 +76,7 @@ class BoardUIManager:
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
             
             # Determine visibility based on the new rules
-            hide_ships_mines = HoverManager.should_hide_ships_mines(game_phase, idx)
+            hide_ships_mines = HoverViewManager.should_hide_ships_mines(game_phase, idx)
 
             if is_current_player:
                 # Update with current hover highlights
@@ -110,7 +110,7 @@ class BoardUIManager:
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
             
             # Determine visibility based on the new rules
-            hide_ships_mines = HoverManager.should_hide_ships_mines(game_phase, idx)
+            hide_ships_mines = HoverViewManager.should_hide_ships_mines(game_phase, idx)
             
             # Handle extended shooting phase with ship highlighting
             if isinstance(game_phase, ExtendedShootingPhase):
