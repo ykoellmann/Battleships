@@ -7,7 +7,7 @@ from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
 from src.Core.Entities.Ships.Ship import Ship
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Players.Computer.HardComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
 
 
 class ExtendedShootingPhase(ShootingPhase):
@@ -33,9 +33,12 @@ class ExtendedShootingPhase(ShootingPhase):
             # Prevent shooting if no ship is confirmed for shooting
             if not self.selection_done:
                 return
-            return super().handle_cell_click(x, y, is_own_board)
+            super().handle_cell_click(x, y, is_own_board)
+            return
 
-        clicked_object: Ship = self.current_player.board.get_cell(x,y).object
+        clicked_object = self.current_player.board.get_cell(x,y).object
+        if not isinstance(clicked_object, Ship):
+            return
 
         self.new_shooting_ship(clicked_object)
         return
@@ -69,6 +72,7 @@ class ExtendedShootingPhase(ShootingPhase):
                         mine_result.hit_object.coordinates if mine_result.hit_object else []
                     )
                 self.hit_mine = True
+            self.turn_callback()
 
         if isinstance(self.current_player, HardComputerPlayer):
             self.current_player.process_shot_result(
@@ -90,7 +94,7 @@ class ExtendedShootingPhase(ShootingPhase):
         if isinstance(self.current_player, ComputerPlayer):
             self.execute_computer_turn()
 
-        self.turn_callback(hit, self.is_over())
+        self.turn_callback()
 
     def next_phase(self):
         new_phase = EndPhase
@@ -139,6 +143,7 @@ class ExtendedShootingPhase(ShootingPhase):
         
         # Select new ship
         self.selected_ship = ship
+        self.turn_callback()
     
     def confirm_ship_selection(self):
         """
@@ -150,3 +155,4 @@ class ExtendedShootingPhase(ShootingPhase):
             self.selected_ship = None  # Temporäre Auswahl zurücksetzen
             self.shot = 0
             self.selection_done = True
+            self.turn_callback()

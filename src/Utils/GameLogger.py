@@ -5,6 +5,7 @@ from src.Core.Entities.GameObject import GameObject
 from src.Core.Entities.Ships.Ship import Ship
 from src.Core.Entities.Mine import Mine
 from src.Utils.Database.DatabaseManager import DatabaseManager
+from src.Utils.Constants import ButtonLabels
 
 
 @dataclass
@@ -166,7 +167,7 @@ class GameLogger:
         Args:
             winner_name: Name of the winning player
         """
-        action = "Spiel beendet"
+        action = ButtonLabels.GAME_ENDED
         result = f"Gewinner: {winner_name}"
         GameLogger._add_entry("System", action, result)
     

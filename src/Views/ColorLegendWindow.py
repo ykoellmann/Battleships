@@ -43,7 +43,7 @@ class ColorLegendWindow:
         # Create new legend window
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Farblegende - Zellzustände")
-        self.window.geometry("400x500")
+        self.window.geometry("400x600")
         self.window.configure(bg=UIColors.WINDOW_BG)
         
         # Make window non-resizable for consistent layout
@@ -180,7 +180,7 @@ class ColorLegendWindow:
         
         # Calculate center position
         window_width = 400
-        window_height = 500
+        window_height = 600
         
         center_x = parent_x + (parent_width // 2) - (window_width // 2)
         center_y = parent_y + (parent_height // 2) - (window_height // 2)

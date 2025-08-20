@@ -1,9 +1,9 @@
 from src.Utils.Constants import PlayerType, Difficulty
 from src.Utils.PlayerConfig import PlayerConfig
 from src.Players.Computer.EasyComputerPlayer import EasyComputerPlayer
-from src.Players.Computer.HardComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
 from src.Players.Computer.ImpossibleComputerPlayer import ImpossibleComputerPlayer
-from src.Players.Computer.VeryHardComputerPlayer import VeryHardComputerPlayer
+from src.Players.Computer.HardComputerPlayer import VeryHardComputerPlayer
 from src.Players.HumanPlayer import HumanPlayer
 from src.Players.Player import Player
 from src.Utils.Database.DatabaseManager import DatabaseManager
@@ -20,9 +20,9 @@ class PlayerFactory:
     
     _computer_map = {
         Difficulty.EASY.value: lambda board, opponent_board, name: EasyComputerPlayer(board),
-        Difficulty.HARD.value: lambda board, opponent_board, name: HardComputerPlayer(board),
+        Difficulty.MEDIUM.value: lambda board, opponent_board, name: HardComputerPlayer(board),
+        Difficulty.HARD.value: lambda board, opponent_board, name: VeryHardComputerPlayer(board, DatabaseManager()),
         Difficulty.IMPOSSIBLE.value: lambda board, opponent_board, name: ImpossibleComputerPlayer(board, opponent_board),
-        Difficulty.VERY_HARD.value: lambda board, opponent_board, name: VeryHardComputerPlayer(board, DatabaseManager()),
     }
 
     @staticmethod

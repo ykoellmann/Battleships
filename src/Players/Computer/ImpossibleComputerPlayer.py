@@ -34,7 +34,7 @@ class ImpossibleComputerPlayer(ComputerPlayer):
             board: The player's game board instance
             opponent_board: The opponent's board for perfect information targeting
         """
-        super().__init__("Impossible Computer", board)
+        super().__init__("Unmöglicher Computer", board)
         self.opponent_board = opponent_board
         self.refresh_available_targets()
 

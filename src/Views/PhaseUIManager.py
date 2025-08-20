@@ -1,0 +1,251 @@
+"""
+Phase-specific UI management for the GameUI class.
+
+This module provides centralized UI update functionality for different
+game phases, coordinating between various UI managers and components
+to maintain consistent state throughout the game.
+"""
+
+import tkinter as tk
+from tkinter import ttk
+from typing import List
+from src.Utils.GameState import GameState
+from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
+from src.Players.HumanPlayer import HumanPlayer
+from src.Views.BoardView import BoardView
+from src.Views.ButtonManager import ButtonManager
+from src.Views.HoverManager import HoverManager
+from src.Utils.Constants import ButtonLabels, MessageConstants, ButtonType
+
+
+class PhaseUIManager:
+    """
+    Manages phase-specific UI updates for the game interface.
+    
+    This class coordinates UI updates across different game phases,
+    working with other managers to ensure consistent state and
+    proper UI configuration for each phase.
+    
+    Attributes:
+        current_ship_label: Label widget showing current ship placement info
+        board_views: List of BoardView instances for display updates
+        button_manager: ButtonManager instance for button control
+        hover_manager: HoverManager instance for hover effects
+    """
+    
+    def __init__(self, current_ship_label: ttk.Label, board_views: List[BoardView], 
+                 button_manager: ButtonManager, hover_manager: HoverManager):
+        """
+        Initialize the PhaseUIManager with UI components and managers.
+        
+        Args:
+            current_ship_label: Label widget for current ship information
+            board_views: List of BoardView instances to manage
+            button_manager: ButtonManager for button control
+            hover_manager: HoverManager for hover effects
+        """
+        self.current_ship_label = current_ship_label
+        self.board_views = board_views
+        self.button_manager = button_manager
+        self.hover_manager = hover_manager
+    
+    def update_ui(self, game_phase) -> None:
+        """
+        Central method for updating the entire UI based on the current game state.
+        
+        This method unifies all UI updates and ensures the user interface
+        is consistent with the current game state.
+        
+        Args:
+            game_phase: Current game phase instance, None for pre-game
+        """
+        if not game_phase:
+            self._update_ui_pregame()
+            return
+
+        match game_phase.state:
+            case GameState.Placement:
+                self._update_ui_placement(game_phase)
+            case GameState.Shooting:
+                self._update_ui_shooting(game_phase)
+            case GameState.End:
+                self._update_ui_end()
+            case _:
+                self._update_ui_pregame()
+    
+    def _update_ui_placement(self, game_phase) -> None:
+        """
+        UI updates for the placement phase.
+        
+        Args:
+            game_phase: Current placement phase instance
+        """
+        # Label updates
+        self.update_current_ship_label(game_phase)
+        
+        # Button updates
+        self.button_manager.toggle_button("orientation", True, 
+                                         ButtonLabels.TOGGLE_ORIENTATION, 
+                                         lambda: game_phase.toggle_orientation())
+        self.button_manager.toggle_button("auto_place", True,
+                                         ButtonLabels.AUTO_PLACE_ALL,
+                                         lambda: self._handle_auto_place(game_phase))
+        
+        # Hover state
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(True)
+    
+    def _update_ui_shooting(self, game_phase) -> None:
+        """
+        UI updates for the shooting phase.
+        
+        Args:
+            game_phase: Current shooting phase instance
+        """
+        # Label updates (current player)
+        if game_phase.current_player is not None:
+            self.current_ship_label.config(text=f"{game_phase.current_player.name} ist am Zug")
+        
+        # Button updates - different for Extended and Normal Mode
+        if isinstance(game_phase, ExtendedShootingPhase):
+            self.button_manager.show_button_group(ButtonType.CONFIRMATION.value, 
+                                                 confirmation=lambda: game_phase.confirm_ship_selection())
+            # Update selected ship highlighting
+            self.hover_manager.update_ship_selection_highlighting(game_phase)
+        else:
+            self.button_manager.show_button_group(ButtonType.NONE.value)
+        
+        # Hide placement-specific buttons
+        self.button_manager.toggle_button("auto_place", False, "", None)
+        self.button_manager.toggle_button("orientation", False, "", None)
+
+        # Hover state
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(True)
+    
+    def _update_ui_end(self) -> None:
+        """UI updates for game end."""
+        # Disable all boards
+        for board_view in self.board_views:
+            board_view.set_enabled(False)
+            board_view.set_hover_enabled(False)
+            board_view.update()
+        
+        # Label updates
+        self.current_ship_label.config(text=ButtonLabels.GAME_ENDED)
+        
+        # Button updates
+        self.button_manager.toggle_button("orientation", False, "", None)
+        self.button_manager.toggle_button("auto_place", False, "", None)
+    
+    def _update_ui_pregame(self) -> None:
+        """UI updates for pre-game state."""
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(False)
+            board_view.update()
+            board_view.set_enabled(False)
+        
+        self.current_ship_label.config(text="")
+        self.button_manager.toggle_button("orientation", False, "", None)
+        self.button_manager.toggle_button("auto_place", False, "", None)
+    
+    def update_current_ship_label(self, game_phase) -> None:
+        """
+        Update the current ship placement label.
+        
+        Args:
+            game_phase: Current game phase instance
+        """
+        if game_phase.state != GameState.Placement:
+            self.current_ship_label.config(text="")
+            return
+
+        self.current_ship_label.config(
+            text=f"{game_phase.current_player.name}: Platziere {str(game_phase.current_object)}"
+        )
+    
+    def enable_placement_ui(self, game_phase) -> None:
+        """
+        Enable UI elements specific to placement phase.
+        
+        Args:
+            game_phase: Current placement phase instance
+        """
+        # Only the current player's board is active (own field)
+        for idx, board_view in enumerate(self.board_views):
+            if idx == game_phase.current_player_idx:
+                board_view.set_enabled(True)
+            else:
+                board_view.set_enabled(False)
+
+        self.button_manager.toggle_button("orientation", True,
+                                         ButtonLabels.TOGGLE_ORIENTATION,
+                                         lambda: game_phase.toggle_orientation())
+    
+    def _handle_auto_place(self, game_phase) -> None:
+        """
+        Handle auto-placement button callback.
+        
+        Args:
+            game_phase: Current placement phase instance
+        """
+        from tkinter import messagebox
+        from src.Core.GamePhases.PlacementPhase import PlacementPhase
+        
+        if game_phase.state != GameState.Placement:
+            return
+        
+        if isinstance(game_phase, PlacementPhase):
+            success = game_phase.auto_place_all_ships()
+            if success:
+                # Ships were successfully placed, trigger next turn to handle phase transition
+                game_phase.next_turn()
+                # Note: UI update should be called from the main GameUI class after this
+            else:
+                messagebox.showwarning(MessageConstants.AUTO_PLACE_FAILED, 
+                                     MessageConstants.AUTO_PLACE_FAILED_MESSAGE)
+    
+    def get_current_label_text(self) -> str:
+        """
+        Get the current text of the ship label.
+        
+        Returns:
+            Current label text
+        """
+        return self.current_ship_label.cget("text")
+    
+    def set_current_label_text(self, text: str) -> None:
+        """
+        Set the text of the ship label.
+        
+        Args:
+            text: Text to display in the label
+        """
+        self.current_ship_label.config(text=text)
+    
+    def disable_all_boards(self) -> None:
+        """Disable all board interactions."""
+        for board_view in self.board_views:
+            board_view.set_enabled(False)
+            board_view.set_hover_enabled(False)
+    
+    def enable_board(self, board_idx: int, enabled: bool = True) -> None:
+        """
+        Enable or disable a specific board.
+        
+        Args:
+            board_idx: Index of the board to enable/disable
+            enabled: True to enable, False to disable
+        """
+        if 0 <= board_idx < len(self.board_views):
+            self.board_views[board_idx].set_enabled(enabled)
+    
+    def set_hover_for_all_boards(self, enabled: bool) -> None:
+        """
+        Enable or disable hover for all boards.
+        
+        Args:
+            enabled: True to enable hover, False to disable
+        """
+        for board_view in self.board_views:
+            board_view.set_hover_enabled(enabled)

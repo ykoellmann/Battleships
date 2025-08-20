@@ -23,9 +23,9 @@ class PlayerType(Enum):
 class Difficulty(Enum):
     """Difficulty levels for computer players."""
     EASY = "Leicht"
+    MEDIUM = "Mittel"
     HARD = "Schwer"
     IMPOSSIBLE = "Unmöglich"
-    VERY_HARD = "Sehr Schwer"
 
 
 class ButtonType(Enum):
@@ -86,7 +86,7 @@ class UIColors:
 class GameConstants:
     """Centralized game configuration constants."""
     # Option lists for UI dropdowns
-    DIFFICULTY_OPTIONS = [Difficulty.EASY.value, Difficulty.HARD.value, Difficulty.IMPOSSIBLE.value, Difficulty.VERY_HARD.value]
+    DIFFICULTY_OPTIONS = [Difficulty.EASY.value, Difficulty.MEDIUM.value, Difficulty.HARD.value, Difficulty.IMPOSSIBLE.value]
     PLAYER_TYPE_OPTIONS = [PlayerType.HUMAN.value, PlayerType.COMPUTER.value]
     GAME_MODE_OPTIONS = [GameMode.STANDARD.value, GameMode.EXTENDED.value]
     

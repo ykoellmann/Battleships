@@ -4,7 +4,7 @@ from typing import Type
 
 from src.Utils.Constants import (
     GameMode, UIConfig, UIColors,
-    ButtonLabels
+    ButtonLabels, MessageConstants
 )
 
 from src.Core.Board.Board import Board
@@ -27,38 +27,68 @@ from src.Views.ColorLegendWindow import ColorLegendWindow
 from src.Views.StatisticsWindow import StatisticsWindow
 from src.Utils.GameState import GameState
 
+# Import the new manager classes
+from src.Views.ButtonManager import ButtonManager
+from src.Views.StyleManager import StyleManager
+from src.Views.HoverManager import HoverManager
+from src.Views.PhaseUIManager import PhaseUIManager
+from src.Views.BoardUIManager import BoardUIManager
+
 
 class GameUI:
     """
-    UI-Schicht für das Spiel (Tkinter). Verwaltet die Anzeige der Spielfelder,
-    die Platzierungsphase, die Schussphase und die Nutzerinteraktionen.
+    Refactored UI layer for the game using specialized manager classes.
+    
+    This class coordinates between different UI managers to provide a clean,
+    maintainable interface for the battleship game. Responsibilities are
+    separated into specialized manager classes for better code organization.
 
-    Attribute:
-        window: Tk-Hauptfenster.
-        game (Game | None): Aktuelles Spiel.
-        settings_view (SettingsView): Einstellungen/Startansicht mit Callback.
-        current_ship_label: Label zur Anzeige des aktuellen zu platzierenden Objekts.
-        board_views (list[BoardView]): UI-Ansichten für beide Spieler-Boards.
-        hover_cells (set[tuple[int,int]]): Aktuelle Hover-Markierungen gültiger Zellen.
-        hover_invalid_cells (set[tuple[int,int]]): Aktuelle Hover-Markierungen ungültiger Zellen.
+    Attributes:
+        window: Main tkinter window
+        game_phase: Current game phase instance
+        boards_frame: Frame containing game boards
+        base_config: Base configuration for phase transitions
+        winner: Winner of the game
+        board_views: List of BoardView instances
+        has_ended: Flag indicating if game has ended
+        
+        # Manager instances
+        style_manager: Handles TTK styling configuration
+        button_manager: Manages dynamic button creation and state
+        hover_manager: Handles hover effects and highlighting
+        phase_ui_manager: Coordinates phase-specific UI updates
+        board_ui_manager: Manages board state and updates
+        
+        # UI Components
+        settings_view: Game settings and start interface
+        current_ship_label: Label showing current ship placement info
+        button_frame: Frame containing game control buttons
+        log_window: Game logging window
+        color_legend_window: Color legend reference window
+        statistics_window: Game statistics window
     """
-    COMPUTER_TURN_DELAY = 1  # Sekunden
+    
     def __init__(self):
+        """Initialize the GameUI with manager-based architecture."""
         self.window = tk.Tk()
         self.window.title("Schiffe Versenken")
         self.window.configure(bg=UIColors.WINDOW_BG)
         
-        # Configure TTK styles for brownish theme
-        self._configure_ttk_styles()
+        # Initialize style manager first (needed for other components)
+        self.style_manager = StyleManager(self.window)
+        
+        # Initialize game state
         self.game_phase = None
         self.boards_frame = None
         self.base_config = None  # Base configuration to reuse for phase transitions
         self.winner = None  # Initialize winner instead of using hasattr
+        self.has_ended = False
 
+        # Initialize UI components
         self.settings_view = SettingsView(self.window, GameSettings(), self.start_game)
         self.settings_view.grid(row=0, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
 
-        # Anzeige aktuelles Schiff
+        # Current ship display label
         self.current_ship_label = ttk.Label(self.window, text="")
         self.current_ship_label.grid(row=2, column=0, columnspan=2, pady=5)
 
@@ -66,152 +96,32 @@ class GameUI:
         self.button_frame = tk.Frame(self.window, bg=UIColors.WINDOW_BG)
         self.button_frame.grid(row=3, column=0, columnspan=2, pady=10)
 
-        # Initialize buttons as None instead of using hasattr
-        self.orientation_button = None
-        self.confirmation_button = None
-        self.auto_place_button = None
+        # Initialize button manager
+        self.button_manager = ButtonManager(self.button_frame)
 
-        # Spielfelder
+        # Create game boards
         self.board_views = []
         self.create_game_boards()
-        self.has_ended = False
 
-        self.hover_cells = set()
-        self.ship_hover_cells = set()
-        self.ship_selected_cells = set()
-        self.hover_invalid_cells = set()
+        # Initialize managers that depend on board_views
+        self.hover_manager = HoverManager(self.board_views)
+        self.phase_ui_manager = PhaseUIManager(self.current_ship_label, self.board_views, 
+                                              self.button_manager, self.hover_manager)
+        self.board_ui_manager = BoardUIManager(self.board_views, self.hover_manager)
 
-        # Initialize logging system (static class, no instantiation needed)
+        # Initialize auxiliary windows
         self.log_window = LogWindow(self.window)
+        self.color_legend_window = ColorLegendWindow(self.window)
+        self.statistics_window = StatisticsWindow(self.window)
         
         # Initialize database for AI learning
         GameLogger.initialize_database()
         
-        # Initialize color legend window
-        self.color_legend_window = ColorLegendWindow(self.window)
-        
-        # Initialize statistics window
-        self.statistics_window = StatisticsWindow(self.window)
-        
-        # Create the three buttons in SettingsView immediately
+        # Create auxiliary buttons in SettingsView
         self.settings_view.create_log_button(self.log_window.open_window)
         self.settings_view.create_legend_button(self.color_legend_window.open_window)
         self.settings_view.create_statistics_button(self.statistics_window.open_window)
 
-    def _configure_ttk_styles(self):
-        """Configure TTK styles for brownish theme."""
-        style = ttk.Style()
-        
-        # Set theme to default to ensure proper styling base
-        style.theme_use('default')
-        
-        # Brown button style
-        style.configure('Brown.TButton',
-                        background=UIColors.BUTTON_BG,
-                        foreground=UIColors.BUTTON_FG,
-                        borderwidth=1,
-                        focuscolor='none')
-        style.map('Brown.TButton',
-                  background=[('active', UIColors.BUTTON_ACTIVE_BG),
-                             ('pressed', UIColors.BUTTON_ACTIVE_BG)])
-        
-        # Brown combobox style with aggressive configuration
-        style.configure('Brown.TCombobox',
-                        fieldbackground=UIColors.BUTTON_BG,
-                        background=UIColors.BUTTON_BG,
-                        foreground=UIColors.BUTTON_FG,
-                        borderwidth=1,
-                        arrowcolor=UIColors.BUTTON_FG,
-                        insertcolor=UIColors.BUTTON_FG,
-                        relief='flat',
-                        lightcolor=UIColors.BUTTON_BG,
-                        darkcolor=UIColors.BUTTON_BG)
-        style.map('Brown.TCombobox',
-                  fieldbackground=[('readonly', UIColors.BUTTON_BG),
-                                 ('focus', UIColors.BUTTON_BG),
-                                 ('!focus', UIColors.BUTTON_BG),
-                                 ('active', UIColors.BUTTON_BG),
-                                 ('!active', UIColors.BUTTON_BG)],
-                  background=[('readonly', UIColors.BUTTON_BG),
-                            ('focus', UIColors.BUTTON_BG),
-                            ('!focus', UIColors.BUTTON_BG),
-                            ('active', UIColors.BUTTON_BG),
-                            ('!active', UIColors.BUTTON_BG)],
-                  foreground=[('readonly', UIColors.BUTTON_FG),
-                            ('focus', UIColors.BUTTON_FG),
-                            ('!focus', UIColors.BUTTON_FG)],
-                  selectbackground=[('readonly', UIColors.BUTTON_ACTIVE_BG)],
-                  selectforeground=[('readonly', UIColors.BUTTON_FG)],
-                  arrowcolor=[('readonly', UIColors.BUTTON_FG),
-                            ('focus', UIColors.BUTTON_FG),
-                            ('!focus', UIColors.BUTTON_FG)])
-        
-        # Configure combobox sub-elements more aggressively
-        style.element_create('Brown.TCombobox.field', 'from', 'default')
-        style.element_create('Brown.TCombobox.downarrow', 'from', 'default')
-        
-        # Layout configuration
-        style.layout('Brown.TCombobox', [
-            ('Brown.TCombobox.field', {'sticky': 'nswe', 'children': [
-                ('Brown.TCombobox.padding', {'expand': '1', 'sticky': 'nswe', 'children': [
-                    ('Brown.TCombobox.textarea', {'sticky': 'nswe'})
-                ]})
-            ]}),
-            ('Brown.TCombobox.downarrow', {'side': 'right', 'sticky': 'ns'})
-        ])
-        
-        # Configure individual elements
-        style.configure('Brown.TCombobox.field',
-                        background=UIColors.BUTTON_BG,
-                        fieldbackground=UIColors.BUTTON_BG,
-                        bordercolor=UIColors.BUTTON_ACTIVE_BG,
-                        lightcolor=UIColors.BUTTON_BG,
-                        darkcolor=UIColors.BUTTON_BG)
-        
-        style.configure('Brown.TCombobox.downarrow',
-                        background=UIColors.BUTTON_BG,
-                        arrowcolor=UIColors.BUTTON_FG)
-        
-        # Configure combobox Entry sub-element specifically
-        style.configure('Brown.TCombobox.Entry',
-                        background=UIColors.BUTTON_BG,
-                        fieldbackground=UIColors.BUTTON_BG,
-                        foreground=UIColors.BUTTON_FG,
-                        insertcolor=UIColors.BUTTON_FG)
-        style.map('Brown.TCombobox.Entry',
-                  background=[('readonly', UIColors.BUTTON_BG),
-                            ('focus', UIColors.BUTTON_BG),
-                            ('!focus', UIColors.BUTTON_BG)],
-                  fieldbackground=[('readonly', UIColors.BUTTON_BG),
-                                 ('focus', UIColors.BUTTON_BG),
-                                 ('!focus', UIColors.BUTTON_BG)],
-                  foreground=[('readonly', UIColors.BUTTON_FG),
-                            ('focus', UIColors.BUTTON_FG),
-                            ('!focus', UIColors.BUTTON_FG)])
-        
-        # Configure combobox listbox (dropdown list)
-        style.configure('Brown.TCombobox.Listbox',
-                        background=UIColors.BUTTON_BG,
-                        foreground=UIColors.BUTTON_FG,
-                        selectbackground=UIColors.BUTTON_ACTIVE_BG,
-                        selectforeground=UIColors.BUTTON_FG,
-                        borderwidth=1)
-        
-        # Configure the dropdown window with more options
-        self.window.option_add('*TCombobox*Listbox.Background', UIColors.BUTTON_BG)
-        self.window.option_add('*TCombobox*Listbox.Foreground', UIColors.BUTTON_FG)
-        self.window.option_add('*TCombobox*Listbox.selectBackground', UIColors.BUTTON_ACTIVE_BG)
-        self.window.option_add('*TCombobox*Listbox.selectForeground', UIColors.BUTTON_FG)
-        
-        # Additional global combobox options
-        self.window.option_add('*TCombobox*Entry.Background', UIColors.BUTTON_BG)
-        self.window.option_add('*TCombobox*Entry.Foreground', UIColors.BUTTON_FG)
-        self.window.option_add('*TCombobox.Background', UIColors.BUTTON_BG)
-        self.window.option_add('*TCombobox.Foreground', UIColors.BUTTON_FG)
-        
-        # Brown frame style for boards container
-        style.configure('Brown.TFrame',
-                        background=UIColors.FRAME_BG)
         
 
     def create_game_boards(self):
@@ -239,10 +149,9 @@ class GameUI:
         self.has_ended = False
         self.winner = None
         
-        # Reset UI state variables
-        self.hover_cells = set()
-        self.ship_hover_cells = set()
-        self.ship_selected_cells = set()
+        # Reset UI state variables through managers
+        if hasattr(self, 'hover_manager'):
+            self.hover_manager.clear_all_highlights()
         
         settings = self.settings_view.settings
         if settings.mode == GameMode.EXTENDED.value:
@@ -272,10 +181,9 @@ class GameUI:
             board_view.board = self.game_phase.players[idx].board
             board_view.update()
 
-        # Deactivate Buttons
-        self._toggle_auto_place_button(False)
-        self._toggle_orientation_button(False)
-        self._toggle_auto_place_button(False)
+        # Deactivate buttons through ButtonManager
+        self.button_manager.toggle_button("auto_place", False, "", None)
+        self.button_manager.toggle_button("orientation", False, "", None)
         
         # Log game start
         GameLogger.log_game_start(player1.name, player2.name)
@@ -285,113 +193,8 @@ class GameUI:
         self.game_phase.next_turn()
 
     def enable_placement_ui(self):
-        # Nur das Board des aktuellen Spielers ist aktiv (eigenes Feld)
-        for idx, board_view in enumerate(self.board_views):
-            if idx == self.game_phase.current_player_idx:
-                board_view.set_enabled(True)
-            else:
-                board_view.set_enabled(False)
-
-        self._toggle_orientation_button(True)
-
-    def _toggle_orientation_button(self, enabled: bool):
-        """Verwaltet Erstellung/Löschung und Aktivierung des Orientierungsbuttons basierend auf enabled Parameter."""
-        if enabled:
-            # Button erstellen falls nicht vorhanden
-            if self.orientation_button is None:
-                self.orientation_button = tk.Button(
-                    self.button_frame,
-                    text=ButtonLabels.TOGGLE_ORIENTATION,
-                    command=lambda: self.game_phase.toggle_orientation(),
-                    bg=UIColors.BUTTON_BG,
-                    fg=UIColors.BUTTON_FG,
-                    activebackground=UIColors.BUTTON_ACTIVE_BG
-                )
-                self.orientation_button.pack(side=tk.LEFT, padx=5)
-            self.orientation_button.config(state="normal")
-        else:
-            # Button entfernen falls vorhanden
-            if self.orientation_button is not None:
-                self.orientation_button.destroy()
-                self.orientation_button = None
-
-    def _toggle_confirmation_button(self, enabled: bool):
-        """Verwaltet Erstellung/Löschung und Aktivierung des Bestätigungsbuttons basierend auf enabled Parameter."""
-        if enabled:
-            # Button erstellen falls nicht vorhanden
-            if self.confirmation_button is None:
-                self.confirmation_button = tk.Button(
-                    self.button_frame,
-                    text=ButtonLabels.CONFIRM_SELECTION,
-                    command=lambda: self.game_phase.confirm_ship_selection(),
-                    bg=UIColors.BUTTON_BG,
-                    fg=UIColors.BUTTON_FG,
-                    activebackground=UIColors.BUTTON_ACTIVE_BG
-                )
-                self.confirmation_button.pack(side=tk.LEFT, padx=5)
-            self.confirmation_button.config(state="normal")
-        else:
-            # Button entfernen falls vorhanden
-            if self.confirmation_button is not None:
-                self.confirmation_button.destroy()
-                self.confirmation_button = None
-
-    def _toggle_auto_place_button(self, enabled: bool):
-        """Verwaltet Erstellung/Löschung und Aktivierung des Auto-Platzierungsbuttons basierend auf enabled Parameter."""
-        if enabled:
-            # Button erstellen falls nicht vorhanden
-            if self.auto_place_button is None:
-                self.auto_place_button = tk.Button(
-                    self.button_frame,
-                    text=ButtonLabels.AUTO_PLACE_ALL,
-                    command=self._auto_place_all_ships,
-                    bg=UIColors.BUTTON_BG,
-                    fg=UIColors.BUTTON_FG,
-                    activebackground=UIColors.BUTTON_ACTIVE_BG
-                )
-                self.auto_place_button.pack(side=tk.LEFT, padx=5)
-            self.auto_place_button.config(state="normal")
-        else:
-            # Button entfernen falls vorhanden
-            if self.auto_place_button is not None:
-                self.auto_place_button.destroy()
-                self.auto_place_button = None
-    
-
-    def _show_button(self, button_type: str):
-        """Zeigt den entsprechenden Button an und versteckt den anderen."""
-        if button_type == "confirmation":
-            self._toggle_orientation_button(False)  # Verstecke Orientierungsbutton
-            self._toggle_confirmation_button(True)  # Zeige Bestätigungsbutton
-        elif button_type == "orientation":
-            self._toggle_confirmation_button(False)  # Verstecke Bestätigungsbutton
-            self._toggle_orientation_button(True)    # Zeige Orientierungsbutton
-        elif button_type == "none":
-            self._toggle_orientation_button(False)   # Verstecke Orientierungsbutton
-            self._toggle_confirmation_button(False)  # Verstecke Bestätigungsbutton
-
-
-    def _auto_place_all_ships(self):
-        """Callback für den Auto-Platzierungsbutton."""
-        if self.game_phase.state != GameState.Placement:
-            return
-        
-        if isinstance(self.game_phase, PlacementPhase):
-            success = self.game_phase.auto_place_all_ships()
-            if success:
-                # Ships were successfully placed, trigger next turn to handle phase transition
-                self.game_phase.next_turn()
-                self.update_ui()
-            else:
-                messagebox.showwarning("Auto-Platzierung fehlgeschlagen", 
-                                     "Nicht alle Schiffe konnten automatisch platziert werden!")
-
-    def update_current_ship_label(self):
-        if self.game_phase.state != GameState.Placement:
-            self.current_ship_label.config(text="")
-            return
-
-        self.current_ship_label.config(text=f"{self.game_phase.current_player.name}: Platziere {str(self.game_phase.current_object)}]")
+        """Enable UI elements specific to placement phase."""
+        self.phase_ui_manager.enable_placement_ui(self.game_phase)
 
     def on_cell_click(self, x, y, player_idx):
         """Event-Handler für Klicks auf Zellen.
@@ -406,7 +209,7 @@ class GameUI:
         # UI-Update nach jeder Aktion
         self.update_ui()
 
-    def shooting_callback(self, hit, is_over):
+    def shooting_callback(self):
         # Phase transitions are now handled by the phases themselves via next_phase_callback
         # No need to check is_over and create new phases here
         
@@ -415,6 +218,9 @@ class GameUI:
         
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
+        
+        # Update boards to ensure visual changes are shown immediately (especially for computer turns)
+        self.update_boards()
 
     def next_phase_callback(self, next_phase: Type[GamePhase]):
         match True:
@@ -458,7 +264,7 @@ class GameUI:
 
     def placement_callback(self, is_placed, is_over):
         if not is_placed:
-            messagebox.showwarning("Ungültige Platzierung", "Hier kann das Schiff nicht platziert werden!")
+            messagebox.showwarning(MessageConstants.INVALID_PLACEMENT, MessageConstants.INVALID_PLACEMENT_MESSAGE)
             return
 
         # Phase transitions are now handled by the phases themselves via next_phase_callback
@@ -476,270 +282,33 @@ class GameUI:
         if self.winner:
             GameLogger.log_game_end(self.winner.name)
         
-        messagebox.showinfo("Spielende", f"{self.winner.name} hat gewonnen!")
-        self.current_ship_label.config(text="Spiel beendet")
+        messagebox.showinfo(MessageConstants.GAME_END, f"{self.winner.name} hat gewonnen!")
+        self.phase_ui_manager.set_current_label_text(ButtonLabels.GAME_ENDED)
         return True
 
     def start_real_game(self):
-        messagebox.showinfo("Spielstart", "Alle Schiffe platziert! Das Spiel beginnt.")
+        messagebox.showinfo(MessageConstants.GAME_START, MessageConstants.GAME_START_MESSAGE)
         # Zentrale UI-Update statt verstreute Updates
         self.update_ui()
         # Wenn der erste Spieler ein Computer ist, lass ihn sofort schießen
         self.game_phase.next_turn(True)
 
     def on_cell_hover(self, x, y, enter, player_idx):
-        """Event-Handler für Hover über Zellen."""
-        # Handle placement phase hover
-        if self.game_phase.state == GameState.Placement and self._is_hover_valid(player_idx):
-            if not enter:
-                self._clear_hover_highlights(player_idx)
-                return
-            self._calculate_and_show_hover_highlights(x, y, player_idx)
-            return
-        
-        # Handle extended shooting phase ship hover
-        if (self.game_phase.state == GameState.Shooting and 
-            isinstance(self.game_phase, ExtendedShootingPhase) and
-            player_idx == self.game_phase.current_player_idx):
-            self._handle_ship_hover(x, y, enter, player_idx)
-
-    def _is_hover_valid(self, player_idx):
-        """Prüft ob Hover für den gegebenen Spieler valid ist."""
-        return (self.game_phase.state == GameState.Placement and
-                player_idx == self.game_phase.current_player_idx)
-
-    def _clear_hover_highlights(self, player_idx):
-        """Löscht alle Hover-Highlights."""
-        self.hover_cells = set()
-        self.hover_invalid_cells = set()
-        self.board_views[player_idx].update()
-
-    def _calculate_and_show_hover_highlights(self, x, y, player_idx):
-        """Berechnet und zeigt Hover-Highlights für Objektplatzierung."""
-        obj = self.game_phase.current_object
-        obj.set_position(x, y)
-
-        board = self.game_phase.players[player_idx].board
-        highlight = set(obj.coordinates)
-
-        if self._is_placement_valid(obj, board):
-            self.hover_cells = highlight
-            self.hover_invalid_cells = set()
-        else:
-            self.hover_cells = set()
-            self.hover_invalid_cells = self._get_invalid_cells(obj, board, highlight)
-
-        self.board_views[player_idx].update(
-            highlight_cells=self.hover_cells,
-            highlight_invalid_cells=self.hover_invalid_cells
-        )
-
-    def _is_placement_valid(self, obj, board):
-        """Prüft ob die Objektplatzierung gültig ist."""
-        return board.can_place_object(obj)
-
-    def _get_invalid_cells(self, obj, board, highlight):
-        """Ermittelt ungültige Zellen für die Objektplatzierung."""
-        invalid_cells = set()
-        for cx, cy in obj.coordinates:
-            if not (0 <= cx < board.width and 0 <= cy < board.height):
-                invalid_cells.add((cx, cy))
-
-        # Wenn das Objekt nicht platziert werden kann, alle Zellen als ungültig markieren
-        if not board.can_place_object(obj) and not invalid_cells:
-            invalid_cells = highlight
-
-        return invalid_cells
-
-    def _handle_ship_hover(self, x, y, enter, player_idx):
-        """Handle ship hover in extended shooting phase."""
-        if not enter:
-            # Clear ship hover when leaving cell
-            self.ship_hover_cells = set()
-            # Preserve ship selection highlighting when clearing hover
-            self.board_views[player_idx].update(
-                ship_hover_cells=self.ship_hover_cells,
-                ship_selected_cells=self.ship_selected_cells
-            )
-            return
-        
-        # Check if there's a ship at this position
-        cell = self.game_phase.current_player.board.get_cell(x, y)
-        if cell.object and cell.object.coordinates is not None:
-            # Highlight all cells of the ship
-            self.ship_hover_cells = set(cell.object.coordinates)
-        else:
-            self.ship_hover_cells = set()
-        
-        # Update with both hover and selection highlighting
-        self.board_views[player_idx].update(
-            ship_hover_cells=self.ship_hover_cells,
-            ship_selected_cells=self.ship_selected_cells
-        )
-
-    def _update_ship_selection_highlighting(self):
-        """Update ship selection highlighting for extended shooting phase."""
-        if not isinstance(self.game_phase, ExtendedShootingPhase):
-            return
-        
-        # Update selected ship highlighting - verwende active_ship statt selected_ship
-        active_ship = (self.game_phase.active_ship if self.game_phase.active_ship 
-                       else self.game_phase.selected_ship)
-        
-        if active_ship:
-            self.ship_selected_cells = set(active_ship.coordinates)
-        else:
-            self.ship_selected_cells = set()
-        
-        # Update the current player's board with selection highlighting
-        current_player_idx = self.game_phase.current_player_idx
-        self.board_views[current_player_idx].update(
-            ship_hover_cells=self.ship_hover_cells,
-            ship_selected_cells=self.ship_selected_cells
-        )
+        """Event handler for cell hover events, delegated to HoverManager."""
+        self.hover_manager.handle_cell_hover(x, y, enter, player_idx, self.game_phase)
 
     def update_ui(self):
         """
-        Zentrale Methode zur Aktualisierung der gesamten UI basierend auf dem aktuellen GameState.
-
-        Diese Methode vereinheitlicht alle UI-Updates und stellt sicher, dass die Benutzeroberfläche
-        konsistent mit dem aktuellen Spielzustand ist.
+        Central method for updating the entire UI based on the current game state.
+        
+        This method is delegated to the PhaseUIManager which coordinates all
+        UI updates and ensures consistency with the current game state.
         """
-        if not self.game_phase:
-            self._update_ui_pregame()
-            return
-
-        match self.game_phase.state:
-            case GameState.Placement:
-                self._update_ui_placement()
-            case GameState.Shooting:
-                self._update_ui_shooting()
-            case GameState.End:
-                self._update_ui_end()
-            case _:
-                self._update_ui_pregame()
-
-    def _update_ui_placement(self):
-        """UI-Updates für die Platzierungsphase."""
-        # Board-Updates
-        self._update_boards_placement()
-        
-        # Label-Updates
-        self.update_current_ship_label()
-        
-        # Button-Updates
-        self._toggle_orientation_button(True)
-        self._toggle_auto_place_button(True)
-        
-        # Hover-State
-        for board_view in self.board_views:
-            board_view.set_hover_enabled(True)
-
-    def _update_ui_shooting(self):
-        """UI-Updates für die Schussphase."""
-        # Board-Updates
-        self._update_boards_shooting()
-        
-        # Label-Updates (aktueller Spieler)
-        if self.game_phase.current_player is not None:
-            self.current_ship_label.config(text=f"{self.game_phase.current_player.name} ist am Zug")
-        
-        # Button-Updates - unterschiedlich für Extended und Normal Mode
-        if isinstance(self.game_phase, ExtendedShootingPhase):
-            self._show_button("confirmation")
-            # Update selected ship highlighting
-            self._update_ship_selection_highlighting()
-        else:
-            self._show_button("none")
-        
-        # Hide auto-placement button
-        self._toggle_auto_place_button(False)
-        self._toggle_orientation_button(False)
-
-        # Hover-State
-        for board_view in self.board_views:
-            board_view.set_hover_enabled(True)
-
-    def _update_ui_end(self):
-        """UI-Updates für das Spielende."""
-        # Alle Boards deaktivieren
-        for board_view in self.board_views:
-            board_view.set_enabled(False)
-            board_view.set_hover_enabled(False)
-            board_view.update()
-        
-        # Label-Updates
-        self.current_ship_label.config(text="Spiel beendet")
-        
-        # Button-Updates
-        self._toggle_orientation_button(False)
-        self._toggle_auto_place_button(False)
-
-    def _update_ui_pregame(self):
-        """UI-Updates für den Pre-Game Zustand."""
-        for board_view in self.board_views:
-            board_view.set_hover_enabled(False)
-            board_view.update()
-            board_view.set_enabled(False)
-        
-        self.current_ship_label.config(text="")
-        self._toggle_orientation_button(False)
-        self._toggle_auto_place_button(False)
+        self.phase_ui_manager.update_ui(self.game_phase)
 
     def update_boards(self):
-        """Aktualisiert alle Board-Ansichten basierend auf dem aktuellen Spielzustand."""
-
-        # Wenn aktueller Spieler ein Computer ist → kurze Pause einfügen
-        if isinstance(self.game_phase.current_player, ComputerPlayer):
-            # 500 Millisekunden warten, dann weitermachen
-            # time.sleep(self.COMPUTER_TURN_DELAY)
-            self._update_boards_internal()
-        else:
-            self._update_boards_internal()
-
-    def _update_boards_internal(self):
-        if self.game_phase.state == GameState.Placement:
-            self._update_boards_placement()
-        elif self.game_phase.state == GameState.Shooting:
-            self._update_boards_shooting()
-        else:
-            self._update_boards_pregame()
-
-    def _update_boards_placement(self):
-        """Aktualisiert Boards für Platzierungsphase."""
-        for idx, board_view in enumerate(self.board_views):
-            board_view.set_hover_enabled(True)
-            is_current_player = idx == self.game_phase.current_player_idx
-            is_human = isinstance(self.game_phase.players[idx], HumanPlayer)
-
-            if is_current_player:
-                board_view.update(
-                    highlight_cells=self.hover_cells,
-                    highlight_invalid_cells=self.hover_invalid_cells
-                )
-                board_view.set_enabled(is_human)
-            else:
-                board_view.update()
-                board_view.set_enabled(False)
-
-    def _update_boards_shooting(self):
-        """Aktualisiert Boards für Schussphase."""
-        is_human = isinstance(self.game_phase.current_player, HumanPlayer)
-
-        for idx, board_view in enumerate(self.board_views):
-            board_view.set_hover_enabled(True)
-            board_view.update()
-
-            # Nur gegnerisches Board aktivieren und nur für Menschen
-            is_enemy_board = idx == 1 - self.game_phase.current_player_idx
-            board_view.set_enabled(is_enemy_board and is_human or isinstance(self.game_phase, ExtendedShootingPhase))
-
-    def _update_boards_pregame(self):
-        """Aktualisiert Boards für Pre-Game Zustand."""
-        for board_view in self.board_views:
-            board_view.set_hover_enabled(False)
-            board_view.update()
-            board_view.set_enabled(False)
+        """Update all board views based on the current game state, delegated to BoardUIManager."""
+        self.board_ui_manager.update_boards(self.game_phase)
 
     def run(self):
         self.window.mainloop()

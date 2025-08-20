@@ -1,178 +1,220 @@
+"""
+Very Hard difficulty computer player with learning capabilities.
+
+This module implements a computer player that learns from user behavior patterns
+stored in a SQLite database to make more intelligent placement and targeting decisions.
+"""
+
 import random
-from typing import List, Optional, Tuple
-
-from src.Players.Computer.ComputerPlayer import ComputerPlayer
+from typing import List, Optional, Tuple, Dict
+from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
+from src.Utils.Database.DatabaseManager import DatabaseManager
+from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
+from src.Utils.Database.Shot.UserShotRepository import UserShotRepository
 from src.Utils.Orientation import Orientation
-
 from src.Core.Board.Board import Board
 
 
-class HardComputerPlayer(ComputerPlayer):
+class VeryHardComputerPlayer(HardComputerPlayer):
     """
-    Hard difficulty computer player implementation.
+    Very Hard difficulty computer player that learns from user patterns.
     
-    This computer player uses an intelligent hunting strategy. When it hits a ship,
-    it systematically searches adjacent cells to find and destroy the entire ship.
-    It also removes surrounding cells from targeting when a ship is destroyed
-    to optimize targeting efficiency.
+    This computer player combines the intelligent hunting strategy of HardComputerPlayer
+    with statistical analysis of user behavior patterns for placement and targeting.
+    It analyzes historical data to make predictions about where users are likely to
+    place ships and where they typically shoot.
+    
+    Targeting Strategy:
+    1. Intelligent hunting (inherited from HardComputerPlayer)
+    2. For random shots: Target areas where users place ships most frequently
+    
+    Placement Strategy:
+    1. Avoid areas where users typically shoot
+    2. Use areas where users place ships least frequently
     
     Attributes:
-        name (str): Always "Hard Computer"
-        board (Board): The player's game board where objects are placed
-        objects (List): List of game objects (ships, mines) owned by this player
-        available_targets (List[Tuple[int, int]]): List of coordinates that can still be targeted
-        search_queue (List[Tuple[int, int]]): Queue of high-priority targets around hit ships
-        current_direction (Optional[Tuple[int, int]]): Current search direction when following a ship
-        first_hit (Optional[Tuple[int, int]]): Coordinates of the first hit on current target ship
+        name (str): Always "Schwer Computer"
+        db_manager (DatabaseManager): Database manager for table initialization
+        placement_repo (UserPlacementRepository): Repository for placement operations
+        shot_repo (UserShotRepository): Repository for shot operations
+        placement_heatmap (Dict): Frequency map of user ship placements
+        shot_heatmap (Dict): Frequency map of user shots
     """
     
-    def __init__(self, board: Board) -> None:
+    def __init__(self, board: Board, db_manager: DatabaseManager):
         """
-        Initialize a new HardComputerPlayer instance.
+        Initialize VeryHardComputerPlayer with database access.
         
         Args:
             board: The player's game board instance
+            db_manager: DatabaseManager instance for database initialization
         """
-        super().__init__("Hard Computer", board)
-        self.search_queue: List[Tuple[int, int]] = []
-        self.current_direction: Optional[Tuple[int, int]] = None
-        self.first_hit: Optional[Tuple[int, int]] = None
-
+        super().__init__(board)
+        self.name = "Schwerer Computer"
+        self.db_manager = db_manager
+        self.placement_repo = UserPlacementRepository(db_manager.db_path)
+        self.shot_repo = UserShotRepository(db_manager.db_path)
+        self.placement_heatmap = self.placement_repo.get_placement_heatmap()
+        self.shot_heatmap = self.shot_repo.get_shot_heatmap()
+        
     def select_target(self) -> Optional[Tuple[int, int]]:
         """
-        Select the next target using intelligent hunting strategy.
+        Enhanced target selection using user behavior analysis.
         
         Priority order:
-        1. Targets from search_queue (adjacent to known hits)
-        2. Random targets from available_targets
+        1. Search queue (intelligent hunting - inherited from HardComputerPlayer)
+        2. Statistical targeting based on user placement patterns
         
         Returns:
             Optional[Tuple[int, int]]: The (x, y) coordinates of the selected target,
                                      or None if no targets are available
         """
+        # First use the same intelligent hunting as HardComputerPlayer
         if self.search_queue:
             target = self.search_queue.pop(0)
             if target in self.available_targets:
                 self.available_targets.remove(target)
+                return target
             else:
                 return self.select_target()
-            return target
-
+        
+        # Enhanced statistical target selection
         if self.available_targets:
+            return self._select_statistical_target()
+        
+        return None
+    
+    def _select_statistical_target(self) -> Tuple[int, int]:
+        """
+        Select target based on user placement patterns.
+        
+        Strategy: Target areas where users place ships most frequently,
+        as this is where they're most likely to have ships.
+        
+        Returns:
+            Tuple[int, int]: The (x, y) coordinates of the selected target
+        """
+        if not self.placement_heatmap:
+            # Fallback: random selection if no data available
             target = random.choice(self.available_targets)
             self.available_targets.remove(target)
             return target
-        return None
-
-    def process_shot_result(self, x: int, y: int, was_hit: bool, ship_destroyed: bool = False, 
-                          destroyed_ship_cells: Optional[List[Tuple[int, int]]] = None) -> None:
-        """
-        Process the result of a shot to update targeting strategy.
         
-        This method implements the intelligent hunting behavior:
-        - On miss: Try opposite direction if following a ship
-        - On hit: Add adjacent cells to search queue
-        - On ship destroyed: Clear search state and remove surrounding cells
+        # Create weighted target list based on user placement patterns
+        weighted_targets = []
+        for target in self.available_targets:
+            frequency = self.placement_heatmap.get(target, 0)
+            # Higher frequency = higher probability (minimum weight of 1)
+            weight = max(1, frequency)
+            weighted_targets.extend([target] * weight)
+        
+        target = random.choice(weighted_targets)
+        self.available_targets.remove(target)
+        return target
+    
+    def place_object(self, game_object) -> bool:
+        """
+        Enhanced placement strategy avoiding user shooting patterns.
+        
+        This method tries to place objects in areas where users shoot less frequently,
+        making them harder to find. Falls back to standard placement if needed.
         
         Args:
-            x: X coordinate of the shot
-            y: Y coordinate of the shot  
-            was_hit: Whether the shot was a hit
-            ship_destroyed: Whether the hit destroyed a ship
-            destroyed_ship_cells: List of all coordinates of the destroyed ship
-        """
-        if not was_hit:
-            if self.current_direction and self.first_hit:
-                opp_dx, opp_dy = -self.current_direction[0], -self.current_direction[1]
-                nx, ny = self.first_hit[0] + opp_dx, self.first_hit[1] + opp_dy
-                if (nx, ny) in self.available_targets and (nx, ny) not in self.search_queue:
-                    self.search_queue.insert(0, (nx, ny))
-                self.current_direction = None
-            return
-
-        if ship_destroyed:
-            self.search_queue.clear()
-            self.current_direction = None
-            self.first_hit = None
-
-            # Neue Logik: angrenzende Felder entfernen
-            if destroyed_ship_cells:
-                for cell in destroyed_ship_cells:
-                    for nx, ny in self.get_surrounding_cells(*cell):
-                        if (nx, ny) in self.available_targets:
-                            self.available_targets.remove((nx, ny))
-            return
-
-        if not self.first_hit:
-            self.first_hit = (x, y)
-            self.search_queue.extend(self.get_valid_neighbors(x, y, None))
-        else:
-            if not self.current_direction:
-                if x == self.first_hit[0]:
-                    self.current_direction = (0, 1) if y > self.first_hit[1] else (0, -1)
-                else:
-                    self.current_direction = (1, 0) if x > self.first_hit[0] else (-1, 0)
-
-            if self.current_direction:
-                nx, ny = x + self.current_direction[0], y + self.current_direction[1]
-                if (nx, ny) in self.available_targets:
-                    self.search_queue.insert(0, (nx, ny))
-
-    def get_valid_neighbors(self, x: int, y: int, direction: Optional[Orientation]) -> List[Tuple[int, int]]:
-        """
-        Get valid neighboring cells for targeting based on ship orientation.
-        
-        This method finds adjacent cells that are valid targets, considering
-        ship orientation constraints. For unknown orientation, it checks all
-        four cardinal directions.
-        
-        Args:
-            x: X coordinate of the reference cell
-            y: Y coordinate of the reference cell
-            direction: Known ship orientation, or None if unknown
+            game_object: The game object to place
             
         Returns:
-            List[Tuple[int, int]]: List of valid neighboring coordinates
+            bool: True if the object was successfully placed, False otherwise
         """
-        neighbors = []
-        directions = []
-
-        if direction == Orientation.HORIZONTAL or direction is None:
-            directions.extend([(1, 0), (-1, 0)])
-        if direction == Orientation.VERTICAL or direction is None:
-            directions.extend([(0, 1), (0, -1)])
-
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if (
-                    0 <= nx < self.board.width
-                    and 0 <= ny < self.board.height
-                    and (nx, ny) in self.available_targets
-                    and (nx, ny) not in self.search_queue
-            ):
-                neighbors.append((nx, ny))
-        return neighbors
-
-    def get_surrounding_cells(self, x: int, y: int) -> List[Tuple[int, int]]:
-        """
-        Get all 8 surrounding cells around a given position (including diagonals).
+        if not self.shot_heatmap:
+            # Fallback to parent class if no statistical data
+            return super().place_object(game_object)
         
-        This method is used to mark cells around destroyed ships as unavailable
-        for targeting, since ships cannot be placed adjacent to each other.
+        # Try multiple placement attempts with statistical weighting
+        best_positions = self._get_best_placement_positions(game_object)
+        
+        for position in best_positions:
+            x, y, orientation = position
+            game_object.x, game_object.y = x, y
+            game_object.orientation = orientation
+            if self.board.can_place_object(game_object):
+                self.board.place_object(game_object)
+                return True
+        
+        # Fallback: normal random placement
+        return super().place_object(game_object)
+    
+    def _get_best_placement_positions(self, game_object) -> List[Tuple[int, int, Orientation]]:
+        """
+        Get placement positions sorted by desirability based on user shot patterns.
+        
+        Prefers areas where users shoot less frequently to make ships harder to find.
         
         Args:
-            x: X coordinate of the center cell
-            y: Y coordinate of the center cell
+            game_object: The game object to find positions for
             
         Returns:
-            List[Tuple[int, int]]: List of surrounding cell coordinates within board bounds
+            List[Tuple[int, int, Orientation]]: List of (x, y, orientation) tuples
+                                                sorted by desirability
         """
-        cells = []
-        for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                if dx == 0 and dy == 0:
-                    continue
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < self.board.width and 0 <= ny < self.board.height:
-                    cells.append((nx, ny))
-        return cells
+        positions = []
+        
+        for x in range(self.board.width):
+            for y in range(self.board.height):
+                for orientation in [Orientation.HORIZONTAL, Orientation.VERTICAL]:
+                    # Create temporary object to test placement
+                    temp_obj = game_object.__class__()
+                    temp_obj.x, temp_obj.y = x, y
+                    temp_obj.orientation = orientation
+                    
+                    if self.board.can_place_object(temp_obj):
+                        # Calculate position score based on user shot patterns
+                        score = self._calculate_position_score(temp_obj)
+                        positions.append((score, x, y, orientation))
+        
+        # Sort by score (lower values = less shot frequency = better)
+        positions.sort(key=lambda x: x[0])
+        return [(x, y, o) for _, x, y, o in positions[:10]]  # Return top 10 positions
+    
+    def _calculate_position_score(self, game_object) -> float:
+        """
+        Calculate desirability score for a placement position.
+        
+        Lower scores indicate better positions (less likely to be shot at).
+        
+        Args:
+            game_object: The game object to calculate score for
+            
+        Returns:
+            float: Average shot frequency for this position (lower is better)
+        """
+        total_shot_frequency = 0
+        positions = game_object.get_positions()
+        
+        for pos in positions:
+            frequency = self.shot_heatmap.get(pos, 0)
+            total_shot_frequency += frequency
+        
+        # Return average shot frequency across all occupied positions
+        return total_shot_frequency / len(positions) if positions else 0
+    
+    def refresh_heatmaps(self):
+        """
+        Refresh heatmap data from database.
+        
+        This method can be called to update the AI's knowledge with
+        new user behavior data during gameplay.
+        """
+        self.placement_heatmap = self.placement_repo.get_placement_heatmap()
+        self.shot_heatmap = self.shot_repo.get_shot_heatmap()
+    
+    def get_learning_stats(self) -> Dict[str, int]:
+        """
+        Get statistics about the learning data available.
+        
+        Returns:
+            Dict[str, int]: Dictionary with placement and shot data counts
+        """
+        return {
+            'placements': self.placement_repo.get_placement_count(),
+            'shots': self.shot_repo.get_shot_count()
+        }

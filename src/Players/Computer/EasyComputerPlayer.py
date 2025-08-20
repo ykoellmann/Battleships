@@ -28,7 +28,7 @@ class EasyComputerPlayer(ComputerPlayer):
         Args:
             board: The player's game board instance
         """
-        super().__init__("Easy Computer", board)
+        super().__init__("Leichter Computer", board)
 
     def select_target(self) -> Optional[Tuple[int, int]]:
         """

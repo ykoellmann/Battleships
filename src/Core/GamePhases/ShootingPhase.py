@@ -3,7 +3,7 @@ from src.Core.GamePhases.EndPhase import EndPhase
 from src.Core.GamePhases.GamePhase import GamePhase
 from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Players.Computer.HardComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
 
 
 class ShootingPhase(GamePhase):
@@ -58,7 +58,7 @@ class ShootingPhase(GamePhase):
         if isinstance(self.current_player, ComputerPlayer):
             self.execute_computer_turn()
 
-        self.turn_callback(hit, self.is_over())
+        self.turn_callback()
 
     def is_over(self):
         return self.game_over
