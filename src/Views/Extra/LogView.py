@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import scrolledtext
+
+from src.Utils.AppIcon import AppIcon
 from src.Utils.GameLogger import GameLogger
 from src.Utils.Enums.Constants import UIColors
 
@@ -44,7 +46,7 @@ class LogView:
 
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spiel-Log")
-        self.window.iconbitmap("assets\\logo.ico")
+        AppIcon.set_icon(self.window)
         self.window.geometry("600x400")
         self.window.configure(bg=UIColors.WINDOW_BG)
 

@@ -3,6 +3,7 @@ from tkinter import ttk
 from typing import Dict, Tuple, Optional
 import sqlite3
 
+from src.Utils.AppIcon import AppIcon
 from src.Utils.Enums.Constants import UIColors
 from src.Utils.Database.DatabaseManager import DatabaseManager
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
@@ -66,7 +67,7 @@ class StatisticsView:
 
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spieler-Statistiken")
-        self.window.iconbitmap("assets\\logo.ico")
+        AppIcon.set_icon(self.window)
         self.window.geometry("1000x700")
         self.window.configure(bg=UIColors.WINDOW_BG)
 

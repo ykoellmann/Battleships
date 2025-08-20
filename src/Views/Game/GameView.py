@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Type
 
+from src.Utils.AppIcon import AppIcon
 from src.Utils.Enums.Constants import (
     GameMode, UIColors,
     ButtonLabels, MessageConstants
@@ -68,7 +69,7 @@ class GameView:
         """Initialize the GameUI with manager-based architecture."""
         self.window = tk.Tk()
         self.window.title("Schiffe Versenken")
-        self.window.iconbitmap("assets\\logo.ico")
+        AppIcon.set_icon(self.window)
         self.window.configure(bg=UIColors.WINDOW_BG)
         
         self.style_manager = StyleViewManager(self.window)
