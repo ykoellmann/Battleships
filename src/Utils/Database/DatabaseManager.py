@@ -4,7 +4,7 @@ Database manager for storing and analyzing user behavior patterns.
 This module provides SQLite integration for the Battleships game to store
 user ship placements and shots for statistical analysis by the AI.
 """
-
+import os
 import sqlite3
 
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
@@ -32,7 +32,9 @@ class DatabaseManager:
         Args:
             db_path: Path to the SQLite database file (default: "battleships_data.db")
         """
-        self.db_path = db_path
+        home_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        self.db_path = os.path.join(home_path, db_path)
+
         self._init_database()
         self.placement_repo = UserPlacementRepository(db_path)
         self.shot_repo = UserShotRepository(db_path)
