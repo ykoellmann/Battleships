@@ -37,19 +37,17 @@ Battleships ist eine moderne Python-Implementation des klassischen Brettspiels "
    - 2x Zerstörer (3 Felder)
    - 2x U-Boot (2 Felder)
 
-2. **Minen platzieren**: Optional können Minen auf dem Spielfeld platziert werden
+2. **Minen platzieren**: Optional können Minen auf dem Spielfeld platziert werden im erweiterten Modus
 
 3. **Schießen**: Spieler wechseln sich ab und versuchen, die gegnerischen Schiffe zu treffen
    - Treffer: Rotes Feld, weiterer Schuss möglich
    - Fehlschuss: Schwarzes Feld, Spielerwechsel
-   - Schiff versenkt: Alle Felder des Schiffs werden markiert
 
 4. **Sieg**: Gewonnen hat, wer alle gegnerischen Schiffe versenkt hat
 
 ### Erweiterte Regeln
 - **Minen**: Explodieren bei Treffer und werden sofort zerstört
-- **Erweiterte Schießphase**: Schiff kann ausgewählt werden, um mit diesem zu schießen (falls Schiff eine Mine trifft, wird Schiff zerstört)
-- **Adjacency-Regel**: Schiffe dürfen sich nicht berühren (auch diagonal nicht)
+- **Erweiterte Schussphase**: Schiff kann ausgewählt werden, um mit diesem zu schießen (falls Schiff eine Mine trifft, wird Schiff zerstört)
 
 ## Screenshots
 
@@ -121,7 +119,7 @@ src/
 
 ### Voraussetzungen
 - Python 3.8 oder höher
-- tkinter (meist bereits mit Python installiert)
+- tkinter
 
 ### Installation
 1. Repository klonen oder herunterladen
@@ -130,8 +128,3 @@ src/
    ```bash
    python src/main.py
    ```
-
-### Entwicklung
-Für die Entwicklung werden folgende Tools empfohlen:
-- IDE mit Python-Support (PyCharm)
-- Git für Versionskontrolle
