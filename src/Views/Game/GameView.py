@@ -24,7 +24,6 @@ from src.Views.Extra.ColorLegendView import ColorLegendView
 from src.Views.Extra.StatisticsView import StatisticsView
 from src.Utils.Enums.GameState import GameState
 
-# Import the new manager classes
 from src.Views.Game.ButtonViewManager import ButtonViewManager
 from src.Views.Game.StyleViewManager import StyleViewManager
 from src.Views.Game.HoverViewManager import HoverViewManager
@@ -72,7 +71,6 @@ class GameView:
         self.window.iconbitmap("assets\\logo.ico")
         self.window.configure(bg=UIColors.WINDOW_BG)
         
-        # Initialize style manager first (needed for other components)
         self.style_manager = StyleViewManager(self.window)
         
         # Initialize game state

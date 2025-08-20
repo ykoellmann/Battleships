@@ -141,10 +141,8 @@ class PlacementPhase(GamePhase):
         obj_copy = copy.deepcopy(self.current_object)
         obj_copy.set_position(x, y)
         
-        # Check if placement is valid
         can_place = self.current_player.board.can_place_object(obj_copy)
         
-        # Log placement attempt
         GameLogger.log_ship_placement(
             self.current_player.name, 
             obj_copy, 

@@ -136,5 +136,4 @@ class Player(ABC):
         ship_length = len(game_object.coordinates)
         placed = self._place_safely(self.board, ship_length, game_object)
         self.objects.append(game_object)
-        # Falls keine Position gefunden, mache nichts (sollte aber nie passieren)
         return placed

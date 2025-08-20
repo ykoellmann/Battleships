@@ -37,38 +37,31 @@ class LogView:
         Creates a new window if none exists, or brings existing window to front.
         """
         if self.is_open and self.window and self.window.winfo_exists():
-            # Window already exists, just bring it to front
             self.window.lift()
             self.window.focus_set()
             self.refresh_log()
             return
-        
-        # Create new log window
+
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spiel-Log")
         self.window.iconbitmap("assets\\logo.ico")
         self.window.geometry("600x400")
         self.window.configure(bg=UIColors.WINDOW_BG)
-        
-        # Make window resizable
+
         self.window.rowconfigure(0, weight=1)
         self.window.columnconfigure(0, weight=1)
-        
-        # Center window relative to parent
+
         self._center_window()
-        
-        # Create main frame
+
         main_frame = tk.Frame(self.window, bg=UIColors.FRAME_BG)
         main_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         main_frame.rowconfigure(1, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        
-        # Title label
+
         title_label = tk.Label(main_frame, text="Spiel-Ereignisse", font=("Arial", 12, "bold"),
                               bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG)
         title_label.grid(row=0, column=0, sticky="w", pady=(0, 10))
-        
-        # Text area with scrollbar
+
         self.text_area = scrolledtext.ScrolledText(
             main_frame,
             wrap=tk.WORD,
@@ -80,33 +73,28 @@ class LogView:
             fg=UIColors.BUTTON_FG
         )
         self.text_area.grid(row=1, column=0, sticky="nsew")
-        
-        # Button frame
+
         button_frame = tk.Frame(main_frame, bg=UIColors.FRAME_BG)
         button_frame.grid(row=2, column=0, sticky="ew", pady=(10, 0))
         button_frame.columnconfigure(0, weight=1)
-        
-        # Refresh button
+
         refresh_btn = tk.Button(button_frame, text="Aktualisieren", command=self.refresh_log,
                                bg=UIColors.BUTTON_BG, fg=UIColors.BUTTON_FG, activebackground=UIColors.BUTTON_ACTIVE_BG)
         refresh_btn.grid(row=0, column=0, sticky="w")
-        
-        # Clear button
+
         clear_btn = tk.Button(button_frame, text="Log löschen", command=self.clear_log,
                              bg=UIColors.BUTTON_BG, fg=UIColors.BUTTON_FG, activebackground=UIColors.BUTTON_ACTIVE_BG)
         clear_btn.grid(row=0, column=1, sticky="w", padx=(10, 0))
-        
-        # Close button
+
         close_btn = tk.Button(button_frame, text="Schließen", command=self.close_window,
                              bg=UIColors.BUTTON_BG, fg=UIColors.BUTTON_FG, activebackground=UIColors.BUTTON_ACTIVE_BG)
         close_btn.grid(row=0, column=2, sticky="e")
-        
-        # Handle window close event
+
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
         
         self.is_open = True
         self.refresh_log()
-        
+
         # Auto-scroll to bottom
         self.text_area.see(tk.END)
     
@@ -121,14 +109,11 @@ class LogView:
         """Refresh the log display with current entries."""
         if not self.text_area:
             return
-        
-        # Enable text area for editing
+
         self.text_area.config(state=tk.NORMAL)
-        
-        # Clear current content
+
         self.text_area.delete(1.0, tk.END)
-        
-        # Insert all log entries
+
         log_text = GameLogger.get_log_text()
         if log_text:
             self.text_area.insert(tk.END, log_text)
@@ -137,7 +122,7 @@ class LogView:
         
         # Disable text area to prevent user editing
         self.text_area.config(state=tk.DISABLED)
-        
+
         # Auto-scroll to bottom
         self.text_area.see(tk.END)
     
@@ -150,8 +135,7 @@ class LogView:
         """Center the log window relative to the parent window."""
         if not self.parent_window:
             return
-        
-        # Get parent window position and size
+
         parent_x = self.parent_window.winfo_x()
         parent_y = self.parent_window.winfo_y()
         parent_width = self.parent_window.winfo_width()

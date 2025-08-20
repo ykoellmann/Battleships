@@ -42,8 +42,7 @@ class DatabaseManager:
         """Initialize database with required tables (no heatmap tables - use direct SQL queries instead)."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            
-            # Tabelle für Benutzer-Platzierungen
+
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS user_placements (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,8 +54,7 @@ class DatabaseManager:
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
-            # Tabelle für Benutzer-Schüsse
+
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS user_shots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -31,7 +31,7 @@ class ShootingPhase(GamePhase):
     def execute_turn(self, x, y):
         result = self.other_player.board.shoot_at(x, y)
         
-        # Log shooting attempt
+        # Log shoting attempt
         GameLogger.log_shot(
             self.current_player.name,
             x, y,
@@ -70,7 +70,6 @@ class ShootingPhase(GamePhase):
     def execute_computer_turn(self):
         target = self.current_player.select_target()
         x, y = target
-        # comp_hit, _ = self.execute_turn(x, y)
         self.schedule_after(1000, lambda: self.execute_turn(x, y))
 
 

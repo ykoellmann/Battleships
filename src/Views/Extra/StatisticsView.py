@@ -39,18 +39,15 @@ class StatisticsView:
         self.parent_window = parent_window
         self.window: tk.Toplevel = None
         self.is_open = False
-        
-        # Initialize database access
+
         self.db_manager = DatabaseManager()
         self.placement_repo = UserPlacementRepository(self.db_manager.db_path)
         self.shot_repo = UserShotRepository(self.db_manager.db_path)
-        
-        # Current state
+
         self.current_player: Optional[str] = None
         self.placement_heatmap: Dict[Tuple[int, int], int] = {}
         self.shot_heatmap: Dict[Tuple[int, int], int] = {}
-        
-        # UI components
+
         self.player_combobox: ttk.Combobox = None
         self.placement_canvas: tk.Canvas = None
         self.shot_canvas: tk.Canvas = None
@@ -63,36 +60,29 @@ class StatisticsView:
         Creates a new window if none exists, or brings existing window to front.
         """
         if self.is_open and self.window and self.window.winfo_exists():
-            # Window already exists, just bring it to front
             self.window.lift()
             self.window.focus_set()
             return
-        
-        # Create new statistics window
+
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spieler-Statistiken")
         self.window.iconbitmap("assets\\logo.ico")
         self.window.geometry("1000x700")
         self.window.configure(bg=UIColors.WINDOW_BG)
-        
-        # Make window non-resizable for consistent layout
+
         self.window.resizable(False, False)
-        
-        # Center window relative to parent
+
         self._center_window()
-        
-        # Create main frame with brown background
+
         main_frame = tk.Frame(self.window, bg=UIColors.FRAME_BG, padx=20, pady=20)
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Create UI components
+
         self._create_header(main_frame)
         self._create_player_selection(main_frame)
         self._create_heatmap_section(main_frame)
         self._create_statistics_section(main_frame)
         self._create_controls(main_frame)
-        
-        # Handle window close event
+
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
         
         # Load initial data
@@ -125,8 +115,7 @@ class StatisticsView:
         """
         selection_frame = tk.Frame(parent, bg=UIColors.FRAME_BG)
         selection_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        # Player selection label
+
         player_label = tk.Label(
             selection_frame,
             text="Spieler auswählen:",
@@ -135,8 +124,7 @@ class StatisticsView:
             fg=UIColors.BUTTON_FG
         )
         player_label.pack(side=tk.LEFT, padx=(0, 10))
-        
-        # Player selection dropdown
+
         self.player_combobox = ttk.Combobox(
             selection_frame,
             state="readonly",
@@ -145,8 +133,7 @@ class StatisticsView:
         )
         self.player_combobox.pack(side=tk.LEFT, padx=(0, 10))
         self.player_combobox.bind('<<ComboboxSelected>>', self._on_player_selected)
-        
-        # Refresh button
+
         refresh_btn = tk.Button(
             selection_frame,
             text="Aktualisieren",
@@ -234,8 +221,6 @@ class StatisticsView:
             fg=UIColors.BUTTON_FG
         )
         stats_title.pack(pady=(0, 10))
-        
-        # This will be populated when a player is selected
     
     def _create_controls(self, parent):
         """
@@ -246,8 +231,7 @@ class StatisticsView:
         """
         controls_frame = tk.Frame(parent, bg=UIColors.FRAME_BG)
         controls_frame.pack(fill=tk.X)
-        
-        # Close button
+
         close_btn = tk.Button(
             controls_frame,
             text="Schließen",
@@ -278,8 +262,7 @@ class StatisticsView:
                 
                 # Combine all players
                 all_players = sorted(placement_players | shot_players)
-                
-                # Update combobox
+
                 self.player_combobox['values'] = all_players
                 
                 if all_players and not self.current_player:
@@ -294,12 +277,9 @@ class StatisticsView:
             self.player_combobox['values'] = []
             self._clear_display()
     
-    def _on_player_selected(self, event):
+    def _on_player_selected(self):
         """
         Handle player selection change.
-        
-        Args:
-            event: The combobox selection event
         """
         selected_player = self.player_combobox.get()
         if selected_player and selected_player != self.current_player:
@@ -313,10 +293,8 @@ class StatisticsView:
             return
         
         try:
-            # Get placement heatmap for current player
             self.placement_heatmap = self._get_player_placement_heatmap(self.current_player)
-            
-            # Get shot heatmap for current player
+
             self.shot_heatmap = self._get_player_shot_heatmap(self.current_player)
             
         except Exception as e:
@@ -369,7 +347,6 @@ class StatisticsView:
         canvas.delete("all")
         
         if not heatmap_data:
-            # Show empty message
             canvas.create_text(
                 160, 160,
                 text="Keine Daten verfügbar",
@@ -392,8 +369,7 @@ class StatisticsView:
                 y1 = y * cell_size + 10
                 x2 = x1 + cell_size
                 y2 = y1 + cell_size
-                
-                # Get frequency for this cell
+
                 frequency = heatmap_data.get((x, y), 0)
                 
                 # Calculate color intensity based on frequency
@@ -452,25 +428,21 @@ class StatisticsView:
             return
         
         try:
-            # Get total counts for current player
             with sqlite3.connect(self.db_manager.db_path) as conn:
                 cursor = conn.cursor()
-                
-                # Total placements
+
                 cursor.execute(
                     "SELECT COUNT(*) FROM user_placements WHERE player_name = ?",
                     (self.current_player,)
                 )
                 total_placements = cursor.fetchone()[0]
-                
-                # Total shots
+
                 cursor.execute(
                     "SELECT COUNT(*) FROM user_shots WHERE player_name = ?",
                     (self.current_player,)
                 )
                 total_shots = cursor.fetchone()[0]
-            
-            # Create statistics display
+
             stats_info_frame = tk.Frame(self.stats_frame, bg=UIColors.FRAME_BG)
             stats_info_frame.pack(fill=tk.X)
             
@@ -535,8 +507,7 @@ class StatisticsView:
             self.placement_canvas.delete("all")
         if self.shot_canvas:
             self.shot_canvas.delete("all")
-        
-        # Clear statistics
+
         for widget in self.stats_frame.winfo_children():
             if widget.winfo_class() != 'Label' or widget.cget('text') != 'Statistiken':
                 widget.destroy()
@@ -556,21 +527,18 @@ class StatisticsView:
         """Center the statistics window relative to the parent window."""
         if not self.parent_window:
             return
-        
-        # Get parent window position and size
+
         parent_x = self.parent_window.winfo_x()
         parent_y = self.parent_window.winfo_y()
         parent_width = self.parent_window.winfo_width()
         parent_height = self.parent_window.winfo_height()
-        
-        # Calculate center position
+
         window_width = 1000
         window_height = 700
         
         center_x = parent_x + (parent_width // 2) - (window_width // 2)
         center_y = parent_y + (parent_height // 2) - (window_height // 2)
-        
-        # Ensure window stays within screen bounds
+
         center_x = max(0, center_x)
         center_y = max(0, center_y)
         

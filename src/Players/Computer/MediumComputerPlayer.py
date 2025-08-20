@@ -95,7 +95,7 @@ class MediumComputerPlayer(ComputerPlayer):
             self.current_direction = None
             self.first_hit = None
 
-            # Neue Logik: angrenzende Felder entfernen
+            # remove adjacent fields
             if destroyed_ship_cells:
                 for cell in destroyed_ship_cells:
                     for nx, ny in self.get_surrounding_cells(*cell):

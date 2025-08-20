@@ -38,10 +38,7 @@ class BoardViewManager:
         Args:
             game_phase: Current game phase instance
         """
-        # If current player is a computer, could add delay here if needed
-        # For now, just proceed with internal updates
         if isinstance(game_phase.current_player, ComputerPlayer):
-            # Computer turn handling - delay could be added here
             self._update_boards_internal(game_phase)
         else:
             self._update_boards_internal(game_phase)
@@ -74,12 +71,10 @@ class BoardViewManager:
             board_view.set_hover_enabled(is_human_turn)
             is_current_player = idx == game_phase.current_player_idx
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
-            
-            # Determine visibility based on the new rules
+
             hide_ships_mines = HoverViewManager.should_hide_ships_mines(game_phase, idx)
 
             if is_current_player:
-                # Update with current hover highlights
                 hover_state = self.hover_manager.get_hover_state()
                 board_view.update(
                     highlight_cells=hover_state['hover_cells'],
@@ -108,15 +103,13 @@ class BoardViewManager:
             
             is_current_player = idx == game_phase.current_player_idx
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
-            
-            # Determine visibility based on the new rules
+
             hide_ships_mines = HoverViewManager.should_hide_ships_mines(game_phase, idx)
             
             # Handle extended shooting phase with ship highlighting
             if isinstance(game_phase, ExtendedShootingPhase):
                 hover_state = self.hover_manager.get_hover_state()
                 if idx == game_phase.current_player_idx:
-                    # Current player board shows ship selection highlighting
                     board_view.update(
                         ship_hover_cells=hover_state['ship_hover_cells'],
                         ship_selected_cells=hover_state['ship_selected_cells'],
@@ -132,7 +125,6 @@ class BoardViewManager:
                     hide_ships_mines=hide_ships_mines
                 )
 
-            # Enable enemy board for humans, or enable current player board for extended mode (only for humans)
             is_enemy_board = idx == 1 - game_phase.current_player_idx
             if isinstance(game_phase, ExtendedShootingPhase):
                 # In extended mode, enable boards only for humans

@@ -22,7 +22,7 @@ class SettingsView(tk.Frame):
         tk.Label(self, text="Spiel-Einstellungen", font=("Arial", 14, "bold"), 
                  bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG).grid(row=0, column=0, columnspan=3, pady=5)
 
-        # Spieler 1
+        # Player 1
         tk.Label(self, text="Spieler 1:", bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG).grid(row=1, column=0, sticky="w")
         self.p1_type = tk.StringVar(value=self.settings.p1_type)
         self.p1_type_combo = ttk.Combobox(self, textvariable=self.p1_type, values=GameConstants.PLAYER_TYPE_OPTIONS, state="readonly", width=10, style='Brown.TCombobox')
@@ -35,7 +35,7 @@ class SettingsView(tk.Frame):
         self.p1_diff_var = tk.StringVar(value=self.settings.p1_difficulty)
         self.p1_diff_combo = ttk.Combobox(self, textvariable=self.p1_diff_var, values=GameConstants.DIFFICULTY_OPTIONS, state="readonly", width=10, style='Brown.TCombobox')
 
-        # Spieler 2
+        # Player 2
         tk.Label(self, text="Spieler 2:", bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG).grid(row=2, column=0, sticky="w")
         self.p2_type = tk.StringVar(value=self.settings.p2_type)
         self.p2_type_combo = ttk.Combobox(self, textvariable=self.p2_type, values=GameConstants.PLAYER_TYPE_OPTIONS, state="readonly", width=10, style='Brown.TCombobox')
@@ -48,7 +48,7 @@ class SettingsView(tk.Frame):
         self.p2_diff_var = tk.StringVar(value=self.settings.p2_difficulty)
         self.p2_diff_combo = ttk.Combobox(self, textvariable=self.p2_diff_var, values=GameConstants.DIFFICULTY_OPTIONS, state="readonly", width=10, style='Brown.TCombobox')
 
-        # Spielmodus
+        # Gamemode
         tk.Label(self, text="Spielmodus:", bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG).grid(row=3, column=0, sticky="w")
         self.mode_var = tk.StringVar(value=self.settings.mode)
         tk.Radiobutton(self, text="Normal", variable=self.mode_var, value=GameMode.STANDARD.value,
@@ -56,7 +56,7 @@ class SettingsView(tk.Frame):
         tk.Radiobutton(self, text="Erweitert", variable=self.mode_var, value=GameMode.EXTENDED.value,
                        bg=UIColors.FRAME_BG, fg=UIColors.BUTTON_FG, selectcolor=UIColors.BUTTON_BG).grid(row=3, column=2, sticky="w")
 
-        # Buttons row - Log, Farblegende, Statistiken links, Spiel starten rechts
+        # Buttons row - Log, color legend, statistics on the left, start game on the right
         button_frame = tk.Frame(self, bg=UIColors.FRAME_BG)
         button_frame.grid(row=4, column=0, columnspan=3, pady=10, sticky="ew")
         

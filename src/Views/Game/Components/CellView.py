@@ -23,8 +23,8 @@ class CellView:
             command=self._on_click,
             borderwidth=0.5,
             highlightthickness=0,
-            padx=0,  # Kein horizontales Padding
-            pady=0   # Kein vertikales Padding
+            padx=0,
+            pady=0
         )
         self.button.grid_propagate(False)
 
@@ -45,21 +45,21 @@ class CellView:
         ship_selected: True, wenn ein Schiff ausgewählt ist (grün)
         hide_ships_mines: True if ships and mines should be hidden on this board (default: False)
         """
-        # Reihenfolge: Ungültiges Hover > Ship Selected > Ship Hover > Gültiges Hover > Treffer > Schiff > Standard
+        # Order: Invalid Hover > Ship Selected > Ship Hover > Valid Hover > Hit > Ship > Default
         if highlight_invalid and not hide_ships_mines:
             self.button.config(bg=CellColors.INVALID_HIGHLIGHT, text="")
             return
         if ship_selected and not hide_ships_mines:
-            self.button.config(bg=CellColors.SHIP_SELECTED, text="")  # Grün für ausgewähltes Schiff
+            self.button.config(bg=CellColors.SHIP_SELECTED, text="")  # Green for selected ship
             return
         if ship_hover and not hide_ships_mines:
-            self.button.config(bg=CellColors.SHIP_HOVER, text="")  # Blau für Hover über Schiff
+            self.button.config(bg=CellColors.SHIP_HOVER, text="")  # Blue for hover over ship
             return
         if highlight and not hide_ships_mines:
             self.button.config(bg=CellColors.VALID_HIGHLIGHT, text="")
             return
 
-        # match/case über den von Cell gelieferten Darstellungszustand
+        # match/case on the display state provided by Cell
         match self.cell.state:
             case CellState.HIT_SHIP:
                 self.button.config(text="", bg=CellColors.HIT_SHIP)
@@ -68,13 +68,11 @@ class CellView:
             case CellState.MISS:
                 self.button.config(text="", bg=CellColors.MISS)
             case CellState.SHIP:
-                # Hide ships if requested by the visibility rules
                 if hide_ships_mines:
                     self.button.config(text="", bg=CellColors.EMPTY)
                 else:
                     self.button.config(text="", bg=CellColors.SHIP)
             case CellState.MINE:
-                # Hide mines if requested by the visibility rules
                 if hide_ships_mines:
                     self.button.config(text="", bg=CellColors.EMPTY)
                 else:

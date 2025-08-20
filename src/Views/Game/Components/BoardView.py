@@ -32,9 +32,8 @@ class BoardView:
         self.cell_size = cell_size
         self.click_callback = click_callback
         self.hover_callback = hover_callback
-        self._hover_enabled = False  # Hover im Pre-Game deaktiviert
+        self._hover_enabled = False
 
-        # Rahmen um das gesamte Feld, braun
         self.frame = tk.Frame(parent, highlightbackground=UIColors.BOARD_BORDER, highlightthickness=2, bd=0)
         self.cells_ui = []
         self._build_cells()
@@ -51,10 +50,10 @@ class BoardView:
                     size=self.cell_size,
                     click_callback=self._on_cell_click
                 )
-                # Mouse-Events für Hover
+                # Hover event binding
                 cell_ui.button.bind("<Enter>", lambda e, xx=x, yy=y: self._on_cell_hover(xx, yy, True))
                 cell_ui.button.bind("<Leave>", lambda e, xx=x, yy=y: self._on_cell_hover(xx, yy, False))
-                # Kein padding und kein interner Rand zwischen den Zellen
+
                 cell_ui.button.grid(row=y, column=x)
                 row_ui.append(cell_ui)
             self.cells_ui.append(row_ui)
