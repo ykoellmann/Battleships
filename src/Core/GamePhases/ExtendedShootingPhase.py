@@ -120,12 +120,12 @@ class ExtendedShootingPhase(ShootingPhase):
             random_object = random.choice(random_objects)
             
             # Step 1: Schiffauswahl mit Delay
-            self.window.after(UIConfig.COMPUTER_TURN_DELAY_MS,
+            self.schedule_after(UIConfig.COMPUTER_TURN_DELAY_MS,
                              lambda: self._computer_select_ship(random_object, target))
         else:
             # Kein Schiff verfügbar - direkt schießen
             x, y = target
-            self.window.after(UIConfig.COMPUTER_TURN_DELAY_MS, 
+            self.schedule_after(UIConfig.COMPUTER_TURN_DELAY_MS, 
                              lambda: self.execute_turn(x, y))
 
     def _computer_select_ship(self, ship, target):

@@ -7,6 +7,8 @@ for different game phases.
 """
 
 from typing import Set, Tuple, List
+
+from src.Players.HumanPlayer import HumanPlayer
 from src.Utils.GameState import GameState
 from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase
 from src.Views.BoardView import BoardView
@@ -118,7 +120,8 @@ class HoverManager:
         if player_idx < len(self.board_views):
             self.board_views[player_idx].update(
                 highlight_cells=self.hover_cells,
-                highlight_invalid_cells=self.hover_invalid_cells
+                highlight_invalid_cells=self.hover_invalid_cells,
+                hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, current_player_idx)
             )
     
     def _is_placement_valid(self, obj, board) -> bool:
@@ -176,8 +179,7 @@ class HoverManager:
                 self.board_views[player_idx].update(
                     ship_hover_cells=self.ship_hover_cells,
                     ship_selected_cells=self.ship_selected_cells,
-                    is_opponent_board=False,
-                    both_players_computer=False
+                    hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, player_idx)
                 )
             return
         
@@ -194,8 +196,7 @@ class HoverManager:
             self.board_views[player_idx].update(
                 ship_hover_cells=self.ship_hover_cells,
                 ship_selected_cells=self.ship_selected_cells,
-                is_opponent_board=False,
-                both_players_computer=False
+                hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, player_idx)
             )
     
     def update_ship_selection_highlighting(self, game_phase) -> None:
@@ -223,9 +224,44 @@ class HoverManager:
                 self.board_views[current_player_idx].update(
                     ship_hover_cells=self.ship_hover_cells,
                     ship_selected_cells=self.ship_selected_cells,
-                    is_opponent_board=False,
-                    both_players_computer=False
+                    hide_ships_mines=HoverManager.should_hide_ships_mines(game_phase, current_player_idx)
                 )
+
+    @staticmethod
+    def should_hide_ships_mines(game_phase, board_idx: int) -> bool:
+        """
+        Determine if ships and mines should be hidden on the specified board.
+
+        Implements three visibility scenarios:
+        1. Computer vs Computer: No restrictions (show everything)
+        2. Human vs Human: Hide ships/mines on opponent boards
+        3. Human vs Computer: Always show human boards, always hide computer boards
+
+        Args:
+            game_phase: Current game phase instance
+            board_idx: Index of the board to check
+
+        Returns:
+            bool: True if ships/mines should be hidden, False otherwise
+        """
+        player1_is_human = isinstance(game_phase.players[0], HumanPlayer)
+        player2_is_human = isinstance(game_phase.players[1], HumanPlayer)
+        current_board_is_human = isinstance(game_phase.players[board_idx], HumanPlayer)
+        is_current_player_board = board_idx == game_phase.current_player_idx
+
+        # Case 1: Computer vs Computer - show everything
+        if not player1_is_human and not player2_is_human:
+            return False
+
+        # Case 2: Human vs Human - hide opponent ships/mines
+        if player1_is_human and player2_is_human:
+            return not is_current_player_board
+
+        # Case 3: Human vs Computer - always show human boards, always hide computer boards
+        if (player1_is_human and not player2_is_human) or (not player1_is_human and player2_is_human):
+            return not current_board_is_human
+
+        return False
     
     def clear_all_highlights(self) -> None:
         """Clear all hover and selection highlights from all boards."""

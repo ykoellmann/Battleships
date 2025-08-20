@@ -39,41 +39,6 @@ class BoardUIManager:
         self.board_views = board_views
         self.hover_manager = hover_manager
     
-    def _should_hide_ships_mines(self, game_phase, board_idx: int) -> bool:
-        """
-        Determine if ships and mines should be hidden on the specified board.
-        
-        Implements three visibility scenarios:
-        1. Computer vs Computer: No restrictions (show everything)
-        2. Human vs Human: Hide ships/mines on opponent boards
-        3. Human vs Computer: Always show human boards, always hide computer boards
-        
-        Args:
-            game_phase: Current game phase instance
-            board_idx: Index of the board to check
-            
-        Returns:
-            bool: True if ships/mines should be hidden, False otherwise
-        """
-        player1_is_human = isinstance(game_phase.players[0], HumanPlayer)
-        player2_is_human = isinstance(game_phase.players[1], HumanPlayer)
-        current_board_is_human = isinstance(game_phase.players[board_idx], HumanPlayer)
-        is_current_player_board = board_idx == game_phase.current_player_idx
-        
-        # Case 1: Computer vs Computer - show everything
-        if not player1_is_human and not player2_is_human:
-            return False
-        
-        # Case 2: Human vs Human - hide opponent ships/mines
-        if player1_is_human and player2_is_human:
-            return not is_current_player_board
-        
-        # Case 3: Human vs Computer - always show human boards, always hide computer boards
-        if (player1_is_human and not player2_is_human) or (not player1_is_human and player2_is_human):
-            return not current_board_is_human
-        
-        return False
-    
     def update_boards(self, game_phase) -> None:
         """
         Update all board views based on the current game state.
@@ -119,7 +84,7 @@ class BoardUIManager:
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
             
             # Determine visibility based on the new rules
-            hide_ships_mines = self._should_hide_ships_mines(game_phase, idx)
+            hide_ships_mines = HoverManager.should_hide_ships_mines(game_phase, idx)
 
             if is_current_player:
                 # Update with current hover highlights
@@ -153,7 +118,7 @@ class BoardUIManager:
             is_human_board = isinstance(game_phase.players[idx], HumanPlayer)
             
             # Determine visibility based on the new rules
-            hide_ships_mines = self._should_hide_ships_mines(game_phase, idx)
+            hide_ships_mines = HoverManager.should_hide_ships_mines(game_phase, idx)
             
             # Handle extended shooting phase with ship highlighting
             if isinstance(game_phase, ExtendedShootingPhase):

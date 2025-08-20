@@ -46,16 +46,16 @@ class CellView:
         hide_ships_mines: True if ships and mines should be hidden on this board (default: False)
         """
         # Reihenfolge: Ungültiges Hover > Ship Selected > Ship Hover > Gültiges Hover > Treffer > Schiff > Standard
-        if highlight_invalid:
+        if highlight_invalid and not hide_ships_mines:
             self.button.config(bg=CellColors.INVALID_HIGHLIGHT, text="")
             return
-        if ship_selected:
+        if ship_selected and not hide_ships_mines:
             self.button.config(bg=CellColors.SHIP_SELECTED, text="")  # Grün für ausgewähltes Schiff
             return
-        if ship_hover:
+        if ship_hover and not hide_ships_mines:
             self.button.config(bg=CellColors.SHIP_HOVER, text="")  # Blau für Hover über Schiff
             return
-        if highlight:
+        if highlight and not hide_ships_mines:
             self.button.config(bg=CellColors.VALID_HIGHLIGHT, text="")
             return
 

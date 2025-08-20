@@ -145,6 +145,10 @@ class GameUI:
             self.board_views.append(board_view)
 
     def start_game(self):
+        # Cancel any pending timers from previous game
+        if hasattr(self, 'game_phase') and self.game_phase:
+            self.game_phase.cancel_all_timers()
+        
         # Reset game state variables when starting a new game
         self.has_ended = False
         self.winner = None
@@ -175,6 +179,7 @@ class GameUI:
             settings=settings
         )
         self.game_phase = game_phase_class(self.base_config)
+        self.game_phase.window = self.window  # Set window reference for timer management
 
         # Setze Boards in BoardViews
         for idx, board_view in enumerate(self.board_views):

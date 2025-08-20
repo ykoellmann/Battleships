@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Callable, Optional
+import tkinter as tk
 
 from src.Utils.GameState import GameState
 from src.Core.GamePhases.PhaseConfig import PhaseConfig
@@ -38,6 +39,8 @@ class GamePhase(ABC):
         self.current_player_idx: int = 0
         self.settings: Optional[GameSettings] = config.settings
         self.next_phase_callback: Callable = config.next_phase_callback
+        self.pending_timers: List[str] = []  # Liste der aktiven Timer-IDs
+        self.window: Optional[tk.Tk] = None  # Wird später gesetzt
 
     @abstractmethod
     def handle_cell_click(self, x: int, y: int, is_own_board: bool) -> None:
@@ -140,3 +143,30 @@ class GamePhase(ABC):
             bool: True if the game is over, False if it should continue
         """
         return any(player.has_lost for player in self.players)
+
+    def schedule_after(self, delay_ms: int, callback) -> Optional[str]:
+        """
+        Schedule a delayed callback and track the timer ID.
+        
+        Args:
+            delay_ms: Delay in milliseconds
+            callback: Function to call after delay
+            
+        Returns:
+            Timer ID for potential cancellation, or None if no window available
+        """
+        if self.window:
+            timer_id = self.window.after(delay_ms, callback)
+            self.pending_timers.append(timer_id)
+            return timer_id
+        return None
+
+    def cancel_all_timers(self) -> None:
+        """Cancel all pending timers for this phase."""
+        if self.window:
+            for timer_id in self.pending_timers:
+                try:
+                    self.window.after_cancel(timer_id)
+                except:
+                    pass  # Timer bereits abgelaufen oder ungültig
+            self.pending_timers.clear()
