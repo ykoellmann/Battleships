@@ -1,10 +1,3 @@
-"""
-Statistics window for displaying player behavior analytics.
-
-This module provides a window that displays player statistics including
-placement and shot heatmaps, total counts, and favorite positions.
-"""
-
 import tkinter as tk
 from tkinter import ttk
 from typing import List, Dict, Tuple, Optional
@@ -78,6 +71,7 @@ class StatisticsWindow:
         # Create new statistics window
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spieler-Statistiken")
+        self.window.iconbitmap("assets\\logo.ico")
         self.window.geometry("1000x700")
         self.window.configure(bg=UIColors.WINDOW_BG)
         

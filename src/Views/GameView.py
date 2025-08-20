@@ -72,6 +72,7 @@ class GameUI:
         """Initialize the GameUI with manager-based architecture."""
         self.window = tk.Tk()
         self.window.title("Schiffe Versenken")
+        self.window.iconbitmap("assets\\logo.ico")
         self.window.configure(bg=UIColors.WINDOW_BG)
         
         # Initialize style manager first (needed for other components)

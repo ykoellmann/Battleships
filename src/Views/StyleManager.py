@@ -1,11 +1,3 @@
-"""
-TTK style management for the GameUI class.
-
-This module provides centralized TTK style configuration functionality,
-separating UI styling concerns from the main GameUI class and providing
-a clean interface for theme management.
-"""
-
 import tkinter as tk
 from tkinter import ttk
 from src.Utils.Constants import UIColors

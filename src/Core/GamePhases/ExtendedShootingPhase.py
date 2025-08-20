@@ -8,7 +8,7 @@ from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Core.Entities.Mine import Mine
 from src.Core.Entities.Ships.Ship import Ship
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import MediumComputerPlayer
 
 
 class ExtendedShootingPhase(ShootingPhase):
@@ -67,7 +67,7 @@ class ExtendedShootingPhase(ShootingPhase):
             # Mark all cells of the destroyed ship as shot so it displays as destroyed in UI
             for ship_x, ship_y in self.shooting_ship.coordinates:
                 mine_result = self.current_player.board.shoot_at(ship_x, ship_y)
-                if isinstance(self.other_player, HardComputerPlayer):
+                if isinstance(self.other_player, MediumComputerPlayer):
                     self.other_player.process_shot_result(
                         ship_x, ship_y, mine_result.hit, mine_result.is_destroyed,
                         mine_result.hit_object.coordinates if mine_result.hit_object else []
@@ -75,7 +75,7 @@ class ExtendedShootingPhase(ShootingPhase):
                 self.hit_mine = True
             self.turn_callback()
 
-        if isinstance(self.current_player, HardComputerPlayer):
+        if isinstance(self.current_player, MediumComputerPlayer):
             self.current_player.process_shot_result(
                 x, y, result.hit, result.is_destroyed,
                 result.hit_object.coordinates if result.hit_object else []

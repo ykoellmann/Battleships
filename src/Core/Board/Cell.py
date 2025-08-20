@@ -6,14 +6,15 @@ from src.Utils.ShootResult import ShootResult
 
 
 class CellState(Enum):
-    """Darstellungszustand einer Zelle für die UI.
+    """
+    Display state of a cell for the UI.
 
-    Werte (Priorität der Anzeige):
-        HIT_SHIP: Getroffene Schiffszelle (rot)
-        HIT_MINE: Getroffene Mine (💣 auf schwarz)
-        MISS:     Fehlschuss (schwarz)
-        SHIP:     Ungeschlagene, belegte Schiffszelle (grau)
-        EMPTY:    Leere Zelle (weiß)
+    Values (display priority):
+        HIT_SHIP: Hit ship cell (red)
+        HIT_MINE: Hit mine cell (💣 on black)
+        MISS: Missed shot (black)
+        SHIP: Unhit occupied ship cell (gray)
+        EMPTY: Empty cell (white)
     """
     EMPTY = 0
     SHIP = 1
@@ -25,37 +26,60 @@ class CellState(Enum):
 
 class Cell:
     """
-    Repräsentiert eine einzelne Zelle des Spielfelds.
+    Represents a single cell on the game board.
 
-    Attribute:
-        x (int): X-Koordinate der Zelle (Spalte).
-        y (int): Y-Koordinate der Zelle (Zeile).
-        object (GameObject | None): Belegendes Objekt (Schiff/Mine) oder None.
-        is_shot (bool): Wurde bereits auf diese Zelle geschossen.
-        is_adjacent (bool): Temporäre Markierung für angrenzende Felder (z. B. Hover-Vorschau).
+    Manages the state of an individual board cell including occupancy,
+    shot status, and visual markers for game interaction.
+
+    Attributes:
+        x: X coordinate of the cell (column)
+        y: Y coordinate of the cell (row)
+        object: Occupying game object (ship/mine) or None
+        is_shot: Whether this cell has been shot at
+        is_adjacent: Temporary marker for adjacent cells (e.g., hover preview)
     """
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
-        self.object: GameObject | None = None  # Objekt, das diese Zelle belegt
-        self.is_shot: bool = False             # Wurde auf diese Zelle geschossen?
+        self.object: GameObject | None = None
+        self.is_shot: bool = False
         self.is_adjacent: bool = False         # Wird als angrenzend angezeigt (z. B. Hover-Vorschau)
 
     def place_object(self, obj: GameObject):
+        """
+        Place a game object on this cell.
+
+        Args:
+            obj: The game object to place on this cell
+        """
         self.object = obj
         obj.is_placed = True
 
     def mark_adjacent(self):
+        """
+        Mark this cell as adjacent for visual preview purposes.
+        """
         self.is_adjacent = True
 
     def clear_adjacent(self):
+        """
+        Clear the adjacent marker from this cell.
+        """
         self.is_adjacent = False
 
     def shoot(self) -> ShootResult:
+        """
+        Execute a shot on this cell.
+
+        Marks the cell as shot and triggers hit handling if an object is present.
+
+        Returns:
+            ShootResult: Result of the shot (hit/miss with additional information)
+        """
         self.is_shot = True
         if self.object:
-            return ShootResult(True, self.object.on_hit(self.x, self.y), False, self.object)  # Treffer
-        return ShootResult.miss()  # Fehlschuss
+            return ShootResult(True, self.object.on_hit(self.x, self.y), False, self.object)
+        return ShootResult.miss()
 
     @property
     def is_occupied(self) -> bool:
@@ -64,10 +88,10 @@ class Cell:
     @property
     def is_hit(self) -> bool:
         """
-        Prüft ob die Zelle getroffen wurde und ein Objekt enthält.
+        Check if the cell has been hit and contains an object.
 
         Returns:
-            bool: True wenn die Zelle getroffen wurde und ein Objekt enthält, sonst False
+            bool: True if the cell was hit and contains an object, False otherwise
         """
         return self.is_shot and self.object is not None
 
@@ -85,16 +109,17 @@ class Cell:
 
     @property
     def state(self) -> CellState:
-        """Ermittelt den UI-relevanten Zustand dieser Zelle.
+        """
+        Determine the UI-relevant state of this cell.
 
-        Die Priorität entspricht der bisherigen Anzeige-Logik:
-        - Zuerst Trefferfälle unterscheiden (Schiff > Mine),
-        - dann Fehlschuss,
-        - dann sichtbares Schiff,
-        - sonst leer.
+        The priority follows the existing display logic:
+        - First distinguish hit cases (ship > mine)
+        - Then missed shots
+        - Then visible ships
+        - Otherwise empty
 
         Returns:
-            CellState: Aufbereiteter Darstellungszustand für die UI.
+            CellState: Processed display state for the UI
         """
         if self.is_hit and self.has_ship:
             return CellState.HIT_SHIP

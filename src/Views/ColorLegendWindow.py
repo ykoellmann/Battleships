@@ -43,6 +43,7 @@ class ColorLegendWindow:
         # Create new legend window
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Farblegende - Zellzustände")
+        self.window.iconbitmap("assets\\logo.ico")
         self.window.geometry("400x600")
         self.window.configure(bg=UIColors.WINDOW_BG)
         

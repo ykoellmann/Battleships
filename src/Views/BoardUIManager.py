@@ -1,11 +1,3 @@
-"""
-Board update management for the GameUI class.
-
-This module provides centralized board update functionality,
-handling board state updates, highlighting coordination,
-and phase-specific board configurations.
-"""
-
 from typing import List
 from src.Utils.GameState import GameState
 from src.Core.GamePhases.ExtendedShootingPhase import ExtendedShootingPhase

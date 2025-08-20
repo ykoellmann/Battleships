@@ -46,6 +46,7 @@ class LogWindow:
         # Create new log window
         self.window = tk.Toplevel(self.parent_window)
         self.window.title("Spiel-Log")
+        self.window.iconbitmap("assets\\logo.ico")
         self.window.geometry("600x400")
         self.window.configure(bg=UIColors.WINDOW_BG)
         

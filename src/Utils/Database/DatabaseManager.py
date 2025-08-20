@@ -76,15 +76,3 @@ class DatabaseManager:
         """Clear all stored user data (for testing/reset purposes)."""
         self.placement_repo.clear_all()
         self.shot_repo.clear_all()
-    
-    def get_statistics(self) -> Dict[str, int]:
-        """
-        Get basic statistics about stored data using repositories.
-        
-        Returns:
-            Dict[str, int]: Dictionary with counts of placements and shots
-        """
-        return {
-            'placements': self.placement_repo.get_placement_count(),
-            'shots': self.shot_repo.get_shot_count()
-        }

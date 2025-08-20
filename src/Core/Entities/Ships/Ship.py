@@ -4,12 +4,12 @@ from src.Utils.Orientation import Orientation
 
 class Ship(GameObject):
     """
-    Basisklasse für Schiffe mit gemeinsamer Logik für Treffer, Zerstörung und Bilddarstellung.
+    Base class for ships with common logic for hits, destruction and image display.
 
-    Attribute:
-        image_horizontal: Ressourcenpfad/Objekt für horizontale Darstellung.
-        image_vertical: Ressourcenpfad/Objekt für vertikale Darstellung.
-        hits (int): Anzahl registrierter Treffer.
+    Attributes:
+        image_horizontal: Resource path/object for horizontal display
+        image_vertical: Resource path/object for vertical display
+        hits: Number of registered hits on this ship
     """
     def __init__(self, name: str, size: int, orientation: Orientation, image_horizontal, image_vertical,
                  coordinates: list[tuple[int, int]] = None):
@@ -20,18 +20,40 @@ class Ship(GameObject):
 
     @property
     def image(self):
+        """
+        Get the appropriate image based on current orientation.
+        
+        Returns:
+            Image resource for horizontal or vertical orientation
+        """
         return (
             self.image_horizontal if self.orientation == Orientation.HORIZONTAL
             else self.image_vertical
         )
 
     def on_hit(self, x, y):
+        """
+        Handle being hit by incrementing hit count.
+        
+        Args:
+            x: X coordinate of the hit
+            y: Y coordinate of the hit
+            
+        Returns:
+            bool: True if ship is destroyed after this hit, False otherwise
+        """
         if self.hits < self.size:
             self.hits = self.hits + 1
         return self.is_destroyed
 
     @property
     def is_destroyed(self):
+        """
+        Check if ship is completely destroyed.
+        
+        Returns:
+            bool: True if hits equal or exceed ship size, False otherwise
+        """
         return self.hits >= self.size
 
     def destroy(self):

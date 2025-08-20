@@ -5,13 +5,17 @@ from src.Utils.ShootResult import ShootResult
 
 class Board:
     """
-    Spielfeld-Logik bestehend aus einem 2D-Raster aus Cell-Objekten.
+    Game board logic consisting of a 2D grid of Cell objects.
 
-    Attribute:
-        width (int): Breite des Boards in Zellen.
-        height (int): Höhe des Boards in Zellen.
-        grid (list[list[Cell]]): 2D-Liste aller Zellen.
-        objects (list[GameObject]): Liste aller platzierten Spielobjekte.
+    Manages the placement and interaction of game objects on a grid-based
+    board. Handles object placement validation, adjacency rules, and
+    shooting mechanics.
+
+    Attributes:
+        width: Board width in cells
+        height: Board height in cells  
+        grid: 2D list of all cells
+        objects: List of all placed game objects
     """
     def __init__(self, width: int = 10, height: int = 10):
         self.width = width
@@ -19,51 +23,55 @@ class Board:
         self.grid: list[list[Cell]] = [
             [Cell(x, y) for y in range(height)] for x in range(width)
         ]
-        self.objects: list[GameObject] = []  # Alle platzierten Objekte
+        self.objects: list[GameObject] = []
 
     def get_cell(self, x: int, y: int) -> Cell | None:
-        """Gibt die Zelle an Position (x, y) zurück, falls innerhalb der Grenzen.
+        """
+        Get the cell at position (x, y) if within board bounds.
 
         Args:
-            x (int): Spaltenindex.
-            y (int): Zeilenindex.
+            x: Column index
+            y: Row index
+
         Returns:
-            Cell | None: Die Zelle oder None, wenn außerhalb des Boards.
+            Cell | None: The cell at the specified position, or None if out of bounds
         """
         if 0 <= x < self.width and 0 <= y < self.height:
             return self.grid[x][y]
         return None
 
     def can_place_object(self, obj: GameObject) -> bool:
-        """Prüft, ob ein Spielobjekt auf dem Board platziert werden kann.
+        """
+        Check if a game object can be placed on the board.
 
-        Kriterien:
-        - Alle Zielzellen müssen innerhalb des Boards und frei sein.
-        - Keine direkt angrenzende Zelle (inkl. Diagonalen) darf belegt sein.
+        Validates placement by ensuring all target cells are within bounds
+        and free, and that no adjacent cells (including diagonals) are occupied.
 
         Args:
-            obj (GameObject): Das zu platzierende Objekt mit gesetzten Koordinaten.
+            obj: The game object to place with coordinates already set
+
         Returns:
-            bool: True, wenn Platzierung möglich ist, sonst False.
+            bool: True if placement is possible, False otherwise
         """
-        # Prüfe, ob alle Zellen frei sind
         for x, y in obj.coordinates:
             cell = self.get_cell(x, y)
             if not cell or cell.is_occupied:
                 return False
-        # Prüfe, ob angrenzende Zellen frei sind (keine direkten Nachbarn)
+        
         for cell in self._get_adjacent_cells(obj):
             if cell.is_occupied:
                 return False
         return True
 
     def place_object(self, obj: GameObject) -> bool:
-        """Platziert ein Objekt auf dem Board, sofern die Platzierung gültig ist.
+        """
+        Place an object on the board if the placement is valid.
 
         Args:
-            obj (GameObject): Das zu platzierende Objekt mit zuvor gesetzten Koordinaten.
+            obj: The game object to place with coordinates already set
+
         Returns:
-            bool: True bei erfolgreicher Platzierung, sonst False.
+            bool: True if placement was successful, False otherwise
         """
         if not self.can_place_object(obj):
             return False
@@ -76,10 +84,11 @@ class Board:
         return True
 
     def remove_object(self, obj: GameObject):
-        """Entfernt ein zuvor platziertes Objekt vom Board und bereinigt Zustand.
+        """
+        Remove a previously placed object from the board and clean up state.
 
         Args:
-            obj (GameObject): Das zu entfernende Objekt.
+            obj: The game object to remove
         """
         for x, y in obj.coordinates:
             cell = self.get_cell(x, y)
@@ -91,12 +100,14 @@ class Board:
             self.objects.remove(obj)
 
     def _get_adjacent_cells(self, obj: GameObject) -> list[Cell]:
-        """Ermittelt alle angrenzenden Zellen (inkl. Diagonalen) zu den Koordinaten eines Objekts.
+        """
+        Get all adjacent cells (including diagonals) to an object's coordinates.
 
         Args:
-            obj (GameObject): Objekt, dessen Umgebung geprüft wird.
+            obj: Game object whose surroundings are checked
+
         Returns:
-            list[Cell]: Liste der angrenzenden Zellen innerhalb der Board-Grenzen.
+            list[Cell]: List of adjacent cells within board bounds
         """
         adjacent = set()
 
@@ -111,25 +122,34 @@ class Board:
         return list(adjacent)
 
     def _clear_all_adjacent_markers(self):
-        """Entfernt alle temporären Nachbar-Markierungen von sämtlichen Zellen."""
+        """
+        Remove all temporary adjacent markers from all cells.
+        """
         for row in self.grid:
             for cell in row:
                 cell.clear_adjacent()
 
     def _mark_adjacent_for_object(self, obj: GameObject):
-        """Markiert freie, angrenzende Zellen rund um ein Objekt (z. B. für Hover-Vorschau)."""
+        """
+        Mark free adjacent cells around an object for visual preview.
+
+        Args:
+            obj: Game object whose adjacent cells should be marked
+        """
         for cell in self._get_adjacent_cells(obj):
             if not cell.is_occupied:
                 cell.mark_adjacent()
 
     def shoot_at(self, x: int, y: int) -> ShootResult:
-        """Führt einen Schuss auf die Zelle (x, y) aus, sofern gültig.
+        """
+        Execute a shot at cell (x, y) if valid.
 
         Args:
-            x (int): Spaltenindex.
-            y (int): Zeilenindex.
+            x: Column index
+            y: Row index
+
         Returns:
-            bool: True bei Treffer, False bei Fehlschuss oder ungültiger Schuss.
+            ShootResult: Result of the shot attempt
         """
         cell = self.get_cell(x, y)
         if not cell or cell.is_shot:

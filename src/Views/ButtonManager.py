@@ -1,11 +1,3 @@
-"""
-Button management for the GameUI class.
-
-This module provides centralized button management functionality,
-eliminating code duplication and providing a clean interface for
-dynamic button creation, destruction, and state management.
-"""
-
 import tkinter as tk
 from typing import Dict, Optional, Callable
 from src.Utils.Constants import UIColors, ButtonLabels, ButtonType

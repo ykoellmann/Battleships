@@ -1,11 +1,3 @@
-"""
-Hover effect management for the GameUI class.
-
-This module provides centralized hover effect functionality,
-handling cell highlighting, ship hover effects, and hover validation
-for different game phases.
-"""
-
 from typing import Set, Tuple, List
 
 from src.Players.HumanPlayer import HumanPlayer

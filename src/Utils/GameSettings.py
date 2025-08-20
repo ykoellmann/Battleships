@@ -1,10 +1,3 @@
-"""
-Game settings data model for the Battleships game.
-
-This module contains the data model for game configuration settings,
-separated from the UI components for better separation of concerns.
-"""
-
 from dataclasses import dataclass
 from typing import Optional, Any
 

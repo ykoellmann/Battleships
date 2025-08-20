@@ -7,7 +7,7 @@ stored in a SQLite database to make more intelligent placement and targeting dec
 
 import random
 from typing import List, Optional, Tuple, Dict
-from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import MediumComputerPlayer
 from src.Utils.Database.DatabaseManager import DatabaseManager
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
 from src.Utils.Database.Shot.UserShotRepository import UserShotRepository
@@ -15,17 +15,17 @@ from src.Utils.Orientation import Orientation
 from src.Core.Board.Board import Board
 
 
-class VeryHardComputerPlayer(HardComputerPlayer):
+class HardComputerPlayer(MediumComputerPlayer):
     """
     Very Hard difficulty computer player that learns from user patterns.
     
-    This computer player combines the intelligent hunting strategy of HardComputerPlayer
+    This computer player combines the intelligent hunting strategy of MediumComputerPlayer
     with statistical analysis of user behavior patterns for placement and targeting.
     It analyzes historical data to make predictions about where users are likely to
     place ships and where they typically shoot.
     
     Targeting Strategy:
-    1. Intelligent hunting (inherited from HardComputerPlayer)
+    1. Intelligent hunting (inherited from MediumComputerPlayer)
     2. For random shots: Target areas where users place ships most frequently
     
     Placement Strategy:
@@ -62,7 +62,7 @@ class VeryHardComputerPlayer(HardComputerPlayer):
         Enhanced target selection using user behavior analysis.
         
         Priority order:
-        1. Search queue (intelligent hunting - inherited from HardComputerPlayer)
+        1. Search queue (intelligent hunting - inherited from MediumComputerPlayer)
         2. Statistical targeting based on user placement patterns
         
         Returns:
@@ -196,25 +196,3 @@ class VeryHardComputerPlayer(HardComputerPlayer):
         
         # Return average shot frequency across all occupied positions
         return total_shot_frequency / len(positions) if positions else 0
-    
-    def refresh_heatmaps(self):
-        """
-        Refresh heatmap data from database.
-        
-        This method can be called to update the AI's knowledge with
-        new user behavior data during gameplay.
-        """
-        self.placement_heatmap = self.placement_repo.get_placement_heatmap()
-        self.shot_heatmap = self.shot_repo.get_shot_heatmap()
-    
-    def get_learning_stats(self) -> Dict[str, int]:
-        """
-        Get statistics about the learning data available.
-        
-        Returns:
-            Dict[str, int]: Dictionary with placement and shot data counts
-        """
-        return {
-            'placements': self.placement_repo.get_placement_count(),
-            'shots': self.shot_repo.get_shot_count()
-        }

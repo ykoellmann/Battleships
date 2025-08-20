@@ -7,7 +7,7 @@ from src.Utils.Orientation import Orientation
 from src.Core.Board.Board import Board
 
 
-class HardComputerPlayer(ComputerPlayer):
+class MediumComputerPlayer(ComputerPlayer):
     """
     Medium difficulty computer player implementation.
     

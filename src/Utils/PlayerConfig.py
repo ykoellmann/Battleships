@@ -1,10 +1,3 @@
-"""
-Player configuration data model for the Battleships game.
-
-This module contains the configuration data model for player creation,
-providing a clean interface for the PlayerFactory pattern.
-"""
-
 from dataclasses import dataclass
 from typing import Optional
 

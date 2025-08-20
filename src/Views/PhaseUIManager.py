@@ -1,12 +1,3 @@
-"""
-Phase-specific UI management for the GameUI class.
-
-This module provides centralized UI update functionality for different
-game phases, coordinating between various UI managers and components
-to maintain consistent state throughout the game.
-"""
-
-import tkinter as tk
 from tkinter import ttk
 from typing import List
 from src.Utils.GameState import GameState

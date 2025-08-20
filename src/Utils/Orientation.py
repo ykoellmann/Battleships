@@ -3,20 +3,21 @@ from enum import Enum
 
 class Orientation(Enum):
     """
-    Ausrichtung eines Spielobjekts.
+    Orientation of a game object.
 
-    Werte:
-        HORIZONTAL: Waagerechte Ausrichtung.
-        VERTICAL: Senkrechte Ausrichtung.
+    Values:
+        HORIZONTAL: Horizontal orientation.
+        VERTICAL: Vertical orientation.
     """
     HORIZONTAL = 0
     VERTICAL = 1
 
     def rotate(self) -> "Orientation":
-        """Gibt die gedrehte Ausrichtung zurück (horizontal ↔ vertikal).
+        """
+        Return the rotated orientation (horizontal ↔ vertical).
 
         Returns:
-            Orientation: Die jeweils andere Ausrichtung (HORIZONTAL <-> VERTICAL).
+            Orientation: The opposite orientation (HORIZONTAL <-> VERTICAL).
         """
         return Orientation.VERTICAL if self is Orientation.HORIZONTAL else Orientation.HORIZONTAL
 

@@ -3,7 +3,7 @@ from src.Core.GamePhases.EndPhase import EndPhase
 from src.Core.GamePhases.GamePhase import GamePhase
 from src.Core.GamePhases.PhaseConfig import PhaseConfig
 from src.Players.Computer.ComputerPlayer import ComputerPlayer
-from src.Players.Computer.MediumComputerPlayer import HardComputerPlayer
+from src.Players.Computer.MediumComputerPlayer import MediumComputerPlayer
 
 
 class ShootingPhase(GamePhase):
@@ -40,7 +40,7 @@ class ShootingPhase(GamePhase):
             result.is_destroyed
         )
 
-        if isinstance(self.current_player, HardComputerPlayer):
+        if isinstance(self.current_player, MediumComputerPlayer):
             self.current_player.process_shot_result(
                 x, y, result.hit, result.is_destroyed,
                 result.hit_object.coordinates if result.hit_object else []

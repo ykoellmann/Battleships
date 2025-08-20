@@ -6,23 +6,27 @@ from src.Utils.Orientation import Orientation
 
 class GameObject(ABC):
     """
-    Abstrakte Basis-Klasse für alle Spielobjekte (z. B. Schiffe, Minen).
+    Abstract base class for all game objects (e.g., ships, mines).
 
-    Attribute:
-        name (str): Anzeigename des Objekts.
-        size (int): Größe/Länge des Objekts in Zellen.
-        coordinates (list[tuple[int,int]]): Liste der belegten Koordinaten (x, y).
-        is_placed (bool): True, wenn das Objekt auf dem Board platziert wurde.
-        orientation (Orientation): Ausrichtung (horizontal/vertikal).
+    Provides common functionality for game objects that can be placed on the
+    board, including positioning, orientation, and hit handling.
+
+    Attributes:
+        name: Display name of the object
+        size: Size/length of the object in cells
+        coordinates: List of occupied coordinates (x, y)
+        is_placed: True if the object has been placed on the board
+        orientation: Orientation (horizontal/vertical)
     """
     def __init__(self, name: str, size: int, orientation: Orientation = Orientation.HORIZONTAL, coordinates: list[tuple[int, int]] = None):
-        """Initialisiert ein Spielobjekt.
+        """
+        Initialize a game object.
 
         Args:
-            name (str): Anzeigename des Objekts.
-            size (int): Länge/Größe in Zellen.
-            orientation (Orientation): Anfangsausrichtung.
-            coordinates (list[tuple[int,int]] | None): Optionale Startkoordinaten.
+            name: Display name of the object
+            size: Length/size in cells
+            orientation: Initial orientation
+            coordinates: Optional starting coordinates
         """
         self.name = name
         self.size = size
@@ -31,11 +35,12 @@ class GameObject(ABC):
         self.orientation = orientation
 
     def set_position(self, start_x: int, start_y: int):
-        """Berechnet und setzt die Koordinaten basierend auf Startpunkt und Ausrichtung.
+        """
+        Calculate and set coordinates based on starting point and orientation.
 
         Args:
-            start_x (int): Start-Spalte (x).
-            start_y (int): Start-Zeile (y).
+            start_x: Starting column (x)
+            start_y: Starting row (y)
         """
         if self.orientation == Orientation.HORIZONTAL:
             self.coordinates = [(start_x + i, start_y) for i in range(self.size)]
@@ -43,29 +48,45 @@ class GameObject(ABC):
             self.coordinates = [(start_x, start_y + i) for i in range(self.size)]
 
     @abc.abstractmethod
-    def on_hit(self, x, y):  # bei Treffer
-        """Wird aufgerufen, wenn eine der Zellen dieses Objekts getroffen wurde.
+    def on_hit(self, x, y):
+        """
+        Called when one of this object's cells is hit.
 
         Args:
-            x: X-Koordinate des Treffers.
-            y: Y-Koordinate des Treffers.
+            x: X coordinate of the hit
+            y: Y coordinate of the hit
+
         Returns:
-            Beliebiger Wert je nach Implementierung (z. B. ob zerstört), optional.
+            Implementation-dependent value (e.g., whether destroyed), optional
         """
         pass
 
     @property
     @abc.abstractmethod
     def is_destroyed(self) -> bool:
+        """
+        Check if this game object is completely destroyed.
+
+        Returns:
+            bool: True if the object is destroyed, False otherwise
+        """
         pass
 
     def rotate(self):
-        """Dreht die Ausrichtung des Objekts (horizontal ↔ vertikal)."""
+        """
+        Rotate the object's orientation (horizontal ↔ vertical).
+        """
         self.orientation = self.orientation.rotate()
 
     @property
     @abc.abstractmethod
     def image(self):
+        """
+        Get the visual representation/image of this game object.
+
+        Returns:
+            Implementation-dependent image representation
+        """
         pass
 
     def __str__(self):

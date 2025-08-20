@@ -64,34 +64,6 @@ class UserShotRepository:
         )
         return self.insert(shot)
 
-    def select_all(self) -> List[UserShot]:
-        """
-        Select all user shot records from the database.
-
-        Returns:
-            List[UserShot]: List of all shot records
-        """
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                           SELECT id, player_name, x, y, was_hit, timestamp
-                           FROM user_shots
-                           ORDER BY timestamp DESC
-                           """)
-            results = cursor.fetchall()
-
-        return [
-            UserShot(
-                id=row[0],
-                player_name=row[1],
-                x=row[2],
-                y=row[3],
-                was_hit=row[4],
-                timestamp=row[5]
-            )
-            for row in results
-        ]
-
     def get_shot_heatmap(self) -> Dict[Tuple[int, int], int]:
         """
         Get frequency map of where users typically shoot using direct SQL query.
@@ -109,28 +81,6 @@ class UserShotRepository:
             result = cursor.fetchall()
 
         return {(x, y): frequency for x, y, frequency in result}
-
-    def get_hit_ratio_by_position(self) -> Dict[Tuple[int, int], float]:
-        """
-        Get hit ratio for each position using direct SQL query.
-
-        Returns:
-            Dict[Tuple[int, int], float]: Dictionary mapping coordinates to hit ratios
-        """
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                           SELECT x,
-                                  y,
-                                  AVG(CAST(was_hit as FLOAT)) as hit_ratio,
-                                  COUNT(*)                    as total_shots
-                           FROM user_shots
-                           GROUP BY x, y
-                           HAVING COUNT(*) >= 3
-                           """)
-            result = cursor.fetchall()
-
-        return {(x, y): hit_ratio for x, y, hit_ratio, _ in result}
 
     def get_shot_count(self) -> int:
         """
