@@ -74,6 +74,9 @@ class ExtendedShootingPhase(ShootingPhase):
                     )
                 self.hit_mine = True
             self.turn_callback()
+            if self.is_over():
+                self.next_phase()
+                return True, True
 
         if isinstance(self.current_player, MediumComputerPlayer):
             self.current_player.process_shot_result(

@@ -71,4 +71,5 @@ class ImpossibleComputerPlayer(ComputerPlayer):
             for x in range(self.board.width)
             for y in range(self.board.height)
             if self.opponent_board.get_cell(x, y).is_occupied
+               and not self.opponent_board.get_cell(x, y).has_mine
         ]

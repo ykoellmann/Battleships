@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 from typing import List, Tuple
 
 from src.Core.Board.Board import Board
+from src.Core.Entities.Mine import Mine
 from src.Utils.Enums.Constants import BoardConfig
 from src.Utils.Enums.Orientation import Orientation
 
@@ -55,7 +56,7 @@ class Player(ABC):
         Returns:
             bool: True if the player has lost, False otherwise
         """
-        return all(obj.is_destroyed for obj in self.objects)
+        return all(obj.is_destroyed or isinstance(obj, Mine) for obj in self.objects)
 
     def _get_all_valid_positions(self, board, ship_length: int, game_object) -> List[Tuple[int, int, str]]:
         """

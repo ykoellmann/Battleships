@@ -267,7 +267,7 @@ class StatisticsView:
                 
                 if all_players and not self.current_player:
                     self.player_combobox.set(all_players[0])
-                    self._on_player_selected(None)
+                    self._on_player_selected()
                 elif not all_players:
                     self.player_combobox.set("")
                     self._clear_display()
@@ -277,7 +277,7 @@ class StatisticsView:
             self.player_combobox['values'] = []
             self._clear_display()
     
-    def _on_player_selected(self):
+    def _on_player_selected(self, event = None):
         """
         Handle player selection change.
         """
