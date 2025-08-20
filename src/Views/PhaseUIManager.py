@@ -15,7 +15,7 @@ from src.Players.HumanPlayer import HumanPlayer
 from src.Views.BoardView import BoardView
 from src.Views.ButtonManager import ButtonManager
 from src.Views.HoverManager import HoverManager
-from src.Utils.Constants import ButtonLabels, MessageConstants, ButtonType
+from src.Utils.Constants import ButtonLabels, MessageConstants, ButtonType, UIColors
 
 
 class PhaseUIManager:
@@ -48,6 +48,7 @@ class PhaseUIManager:
         self.board_views = board_views
         self.button_manager = button_manager
         self.hover_manager = hover_manager
+        self.selected_ship_label = None  # Label for showing selected ship in extended shooting phase
     
     def update_ui(self, game_phase) -> None:
         """
@@ -83,17 +84,21 @@ class PhaseUIManager:
         # Label updates
         self.update_current_ship_label(game_phase)
         
-        # Button updates
-        self.button_manager.toggle_button("orientation", True, 
+        # Hide ship selection label (only for shooting phase)
+        self._hide_selected_ship_label()
+        
+        # Button updates - only enable if current player is human
+        is_human_turn = isinstance(game_phase.current_player, HumanPlayer)
+        self.button_manager.toggle_button("orientation", is_human_turn, 
                                          ButtonLabels.TOGGLE_ORIENTATION, 
                                          lambda: game_phase.toggle_orientation())
-        self.button_manager.toggle_button("auto_place", True,
+        self.button_manager.toggle_button("auto_place", is_human_turn,
                                          ButtonLabels.AUTO_PLACE_ALL,
                                          lambda: self._handle_auto_place(game_phase))
         
-        # Hover state
+        # Hover state - only enable if current player is human
         for board_view in self.board_views:
-            board_view.set_hover_enabled(True)
+            board_view.set_hover_enabled(is_human_turn)
     
     def _update_ui_shooting(self, game_phase) -> None:
         """
@@ -106,22 +111,44 @@ class PhaseUIManager:
         if game_phase.current_player is not None:
             self.current_ship_label.config(text=f"{game_phase.current_player.name} ist am Zug")
         
-        # Button updates - different for Extended and Normal Mode
+        # Check if current player is human
+        is_human_turn = isinstance(game_phase.current_player, HumanPlayer)
+        
+        # Button updates - different for Extended and Normal Mode, only enable for humans
         if isinstance(game_phase, ExtendedShootingPhase):
-            self.button_manager.show_button_group(ButtonType.CONFIRMATION.value, 
-                                                 confirmation=lambda: game_phase.confirm_ship_selection())
+            # Create ship selection label if it doesn't exist
+            self._create_selected_ship_label()
+            # Update ship selection label text
+            self._update_selected_ship_label(game_phase)
+            
+            # Check if selection is already confirmed (disable button if confirmed)
+            button_enabled = is_human_turn and not game_phase.selection_done
+            if button_enabled:
+                self.button_manager.show_button_group(ButtonType.CONFIRMATION.value, 
+                                                     confirmation=lambda: self._handle_ship_confirmation(game_phase))
+            else:
+                # Show button but keep it disabled
+                self.button_manager.show_button_group(ButtonType.CONFIRMATION.value, 
+                                                     confirmation=lambda: None)
+                # Disable the confirmation button
+                confirm_button = self.button_manager.get_button("confirmation")
+                if confirm_button:
+                    confirm_button.config(state="disabled")
+            
             # Update selected ship highlighting
             self.hover_manager.update_ship_selection_highlighting(game_phase)
         else:
+            # Hide ship selection label for normal mode
+            self._hide_selected_ship_label()
             self.button_manager.show_button_group(ButtonType.NONE.value)
         
         # Hide placement-specific buttons
         self.button_manager.toggle_button("auto_place", False, "", None)
         self.button_manager.toggle_button("orientation", False, "", None)
 
-        # Hover state
+        # Hover state - only enable if current player is human
         for board_view in self.board_views:
-            board_view.set_hover_enabled(True)
+            board_view.set_hover_enabled(is_human_turn)
     
     def _update_ui_end(self) -> None:
         """UI updates for game end."""
@@ -129,10 +156,13 @@ class PhaseUIManager:
         for board_view in self.board_views:
             board_view.set_enabled(False)
             board_view.set_hover_enabled(False)
-            board_view.update()
+            board_view.update(hide_ships_mines=False)
         
         # Label updates
         self.current_ship_label.config(text=ButtonLabels.GAME_ENDED)
+        
+        # Hide ship selection label
+        self._hide_selected_ship_label()
         
         # Button updates
         self.button_manager.toggle_button("orientation", False, "", None)
@@ -142,10 +172,14 @@ class PhaseUIManager:
         """UI updates for pre-game state."""
         for board_view in self.board_views:
             board_view.set_hover_enabled(False)
-            board_view.update()
+            board_view.update(hide_ships_mines=False)
             board_view.set_enabled(False)
         
         self.current_ship_label.config(text="")
+        
+        # Hide ship selection label
+        self._hide_selected_ship_label()
+        
         self.button_manager.toggle_button("orientation", False, "", None)
         self.button_manager.toggle_button("auto_place", False, "", None)
     
@@ -171,14 +205,18 @@ class PhaseUIManager:
         Args:
             game_phase: Current placement phase instance
         """
+        # Check if current player is human
+        is_human_turn = isinstance(game_phase.current_player, HumanPlayer)
+        
         # Only the current player's board is active (own field)
         for idx, board_view in enumerate(self.board_views):
             if idx == game_phase.current_player_idx:
-                board_view.set_enabled(True)
+                board_view.set_enabled(is_human_turn)
             else:
                 board_view.set_enabled(False)
 
-        self.button_manager.toggle_button("orientation", True,
+        # Only enable buttons if current player is human
+        self.button_manager.toggle_button("orientation", is_human_turn,
                                          ButtonLabels.TOGGLE_ORIENTATION,
                                          lambda: game_phase.toggle_orientation())
     
@@ -249,3 +287,43 @@ class PhaseUIManager:
         """
         for board_view in self.board_views:
             board_view.set_hover_enabled(enabled)
+    
+    def _create_selected_ship_label(self) -> None:
+        """Create the ship selection label if it doesn't exist."""
+        if self.selected_ship_label is None:
+            import tkinter as tk
+            # Get the button frame from the button manager
+            button_frame = self.button_manager.button_frame
+            self.selected_ship_label = tk.Label(
+                button_frame,
+                text="Ausgewähltes Schiff: Kein Schiff",
+                bg=UIColors.WINDOW_BG,
+                fg=UIColors.BUTTON_FG
+            )
+            self.selected_ship_label.pack(side=tk.LEFT, padx=10)
+    
+    def _update_selected_ship_label(self, game_phase) -> None:
+        """Update the ship selection label text based on current selection."""
+        if self.selected_ship_label is None:
+            return
+            
+        # Determine which ship is selected (active_ship for confirmed, selected_ship for temporary)
+        selected_ship = game_phase.active_ship if game_phase.active_ship else game_phase.selected_ship
+        
+        if selected_ship:
+            ship_name = selected_ship.__class__.__name__
+            self.selected_ship_label.config(text=f"Ausgewähltes Schiff: {ship_name}")
+        else:
+            self.selected_ship_label.config(text="Ausgewähltes Schiff: Kein Schiff")
+    
+    def _hide_selected_ship_label(self) -> None:
+        """Hide and destroy the ship selection label."""
+        if self.selected_ship_label is not None:
+            self.selected_ship_label.destroy()
+            self.selected_ship_label = None
+    
+    def _handle_ship_confirmation(self, game_phase) -> None:
+        """Handle ship selection confirmation and disable the button."""
+        game_phase.confirm_ship_selection()
+        # Update the label after confirmation
+        self._update_selected_ship_label(game_phase)

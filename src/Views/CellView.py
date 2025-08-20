@@ -36,12 +36,14 @@ class CellView:
         """Aktiviere/Deaktiviere die Interaktivität dieser Zelle."""
         self.button.config(state=("normal" if enabled else "disabled"))
 
-    def update(self, highlight=False, highlight_invalid=False, ship_hover=False, ship_selected=False):
+    def update(self, highlight=False, highlight_invalid=False, ship_hover=False, ship_selected=False, 
+               hide_ships_mines=False):
         """
         highlight: True, wenn diese Zelle beim Hover hervorgehoben werden soll (gültig)
         highlight_invalid: True, wenn diese Zelle beim Hover hervorgehoben werden soll (ungültig)
         ship_hover: True, wenn über ein Schiff gehovered wird (blau)
         ship_selected: True, wenn ein Schiff ausgewählt ist (grün)
+        hide_ships_mines: True if ships and mines should be hidden on this board (default: False)
         """
         # Reihenfolge: Ungültiges Hover > Ship Selected > Ship Hover > Gültiges Hover > Treffer > Schiff > Standard
         if highlight_invalid:
@@ -66,8 +68,16 @@ class CellView:
             case CellState.MISS:
                 self.button.config(text="", bg=CellColors.MISS)
             case CellState.SHIP:
-                self.button.config(text="", bg=CellColors.SHIP)
+                # Hide ships if requested by the visibility rules
+                if hide_ships_mines:
+                    self.button.config(text="", bg=CellColors.EMPTY)
+                else:
+                    self.button.config(text="", bg=CellColors.SHIP)
             case CellState.MINE:
-                self.button.config(text="", bg=CellColors.MINE)
+                # Hide mines if requested by the visibility rules
+                if hide_ships_mines:
+                    self.button.config(text="", bg=CellColors.EMPTY)
+                else:
+                    self.button.config(text="", bg=CellColors.MINE)
             case CellState.EMPTY:
                 self.button.config(text="", bg=CellColors.EMPTY)

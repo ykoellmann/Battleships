@@ -107,6 +107,7 @@ class ExtendedShootingPhase(ShootingPhase):
         self.active_ship = None  # UI-Hervorhebung beim Spielerwechsel zurücksetzen
         self.shot = 0
         self.hit_mine = False
+        self.selection_done = False
         super().next_player()
 
 

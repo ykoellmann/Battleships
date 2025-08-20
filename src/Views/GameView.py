@@ -179,7 +179,7 @@ class GameUI:
         # Setze Boards in BoardViews
         for idx, board_view in enumerate(self.board_views):
             board_view.board = self.game_phase.players[idx].board
-            board_view.update()
+            board_view.update(hide_ships_mines=False)
 
         # Deactivate buttons through ButtonManager
         self.button_manager.toggle_button("auto_place", False, "", None)

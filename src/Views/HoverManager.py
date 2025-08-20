@@ -175,7 +175,9 @@ class HoverManager:
             if player_idx < len(self.board_views):
                 self.board_views[player_idx].update(
                     ship_hover_cells=self.ship_hover_cells,
-                    ship_selected_cells=self.ship_selected_cells
+                    ship_selected_cells=self.ship_selected_cells,
+                    is_opponent_board=False,
+                    both_players_computer=False
                 )
             return
         
@@ -191,7 +193,9 @@ class HoverManager:
         if player_idx < len(self.board_views):
             self.board_views[player_idx].update(
                 ship_hover_cells=self.ship_hover_cells,
-                ship_selected_cells=self.ship_selected_cells
+                ship_selected_cells=self.ship_selected_cells,
+                is_opponent_board=False,
+                both_players_computer=False
             )
     
     def update_ship_selection_highlighting(self, game_phase) -> None:
@@ -212,14 +216,16 @@ class HoverManager:
             self.ship_selected_cells = set(active_ship.coordinates)
         else:
             self.ship_selected_cells = set()
-        
-        # Update the current player's board with selection highlighting
-        current_player_idx = game_phase.current_player_idx
-        if current_player_idx < len(self.board_views):
-            self.board_views[current_player_idx].update(
-                ship_hover_cells=self.ship_hover_cells,
-                ship_selected_cells=self.ship_selected_cells
-            )
+
+            # Update the current player's board with selection highlighting
+            current_player_idx = game_phase.current_player_idx
+            if current_player_idx < len(self.board_views):
+                self.board_views[current_player_idx].update(
+                    ship_hover_cells=self.ship_hover_cells,
+                    ship_selected_cells=self.ship_selected_cells,
+                    is_opponent_board=False,
+                    both_players_computer=False
+                )
     
     def clear_all_highlights(self) -> None:
         """Clear all hover and selection highlights from all boards."""
@@ -229,7 +235,7 @@ class HoverManager:
         self.ship_selected_cells = set()
         
         for board_view in self.board_views:
-            board_view.update()
+            board_view.update(hide_ships_mines=False)
     
     def get_hover_state(self) -> dict:
         """
