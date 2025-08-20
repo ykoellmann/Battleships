@@ -1,5 +1,6 @@
 import random
 
+from src.Utils.Constants import UIConfig
 from src.Utils.GameLogger import GameLogger
 from src.Core.GamePhases.EndPhase import EndPhase
 from src.Core.GamePhases.ShootingPhase import ShootingPhase
@@ -110,17 +111,38 @@ class ExtendedShootingPhase(ShootingPhase):
 
 
     def execute_computer_turn(self):
+        """Execute computer turn with delays between each action for better visibility."""
         target = self.current_player.select_target()
-
+        
         random_objects = [obj for obj in self.current_player.objects if not obj.is_destroyed]
         if random_objects:
             random_object = random.choice(random_objects)
-            self.new_shooting_ship(random_object)
-            self.confirm_ship_selection()
+            
+            # Step 1: Schiffauswahl mit Delay
+            self.window.after(UIConfig.COMPUTER_TURN_DELAY_MS,
+                             lambda: self._computer_select_ship(random_object, target))
+        else:
+            # Kein Schiff verfügbar - direkt schießen
+            x, y = target
+            self.window.after(UIConfig.COMPUTER_TURN_DELAY_MS, 
+                             lambda: self.execute_turn(x, y))
 
+    def _computer_select_ship(self, ship, target):
+        """Step 1: Select ship with UI update."""
+        self.new_shooting_ship(ship)
+        self.turn_callback()  # UI Update für Schiffauswahl
+        
+        # Step 2: Bestätigung mit Delay
+        self._computer_confirm_selection(target)
+
+    def _computer_confirm_selection(self, target):
+        """Step 2: Confirm ship selection with UI update."""
+        self.confirm_ship_selection()
+        self.turn_callback()  # UI Update für Bestätigung
+        
+        # Step 3: Schießen mit Delay
         x, y = target
-        # comp_hit, _ = self.execute_turn(x, y)
-        self.window.after(1000, lambda: self.execute_turn(x, y))
+        self.execute_turn(x, y)
 
     def new_shooting_ship(self, ship: Ship):
         """
