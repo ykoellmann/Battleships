@@ -6,7 +6,6 @@ user ship placements and shots for statistical analysis by the AI.
 """
 
 import sqlite3
-from typing import Dict
 
 from src.Utils.Database.Placement.UserPlacementRepository import UserPlacementRepository
 from src.Utils.Database.Shot.UserShotRepository import UserShotRepository

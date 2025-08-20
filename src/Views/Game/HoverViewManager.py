@@ -113,7 +113,7 @@ class HoverViewManager:
             self.board_views[player_idx].update(
                 highlight_cells=self.hover_cells,
                 highlight_invalid_cells=self.hover_invalid_cells,
-                hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, current_player_idx)
+                hide_ships_mines=HoverViewManager.should_hide_ships_mines(game_phase, player_idx)
             )
     
     def _is_placement_valid(self, obj, board) -> bool:
